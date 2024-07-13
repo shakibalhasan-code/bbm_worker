@@ -1,5 +1,6 @@
 import 'package:bbm_worker/stylish/app_colors.dart';
 import 'package:bbm_worker/views/screens/login_screen.dart';
+import 'package:bbm_worker/views/screens/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         primaryColor: AppColors.appThemeColor
       ),
-      home: LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }

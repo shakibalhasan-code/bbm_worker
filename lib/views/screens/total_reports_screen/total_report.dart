@@ -4,9 +4,42 @@ import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/ta
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_total_work_done.dart';
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_waiting_work.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class TotalReport extends StatelessWidget {
+import '../../../getx/user_data_controller.dart';
+
+class TotalReport extends StatefulWidget {
   const TotalReport({super.key});
+
+  @override
+  State<TotalReport> createState() => _TotalReportState();
+}
+
+
+class _TotalReportState extends State<TotalReport> {
+
+  final UserDataController _userDataController = Get.put(UserDataController());
+  late String userCurrentEmail = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserAuth();
+  }
+
+  void fetchUserAuth() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    userCurrentEmail = prefs.getString('email') ?? '';
+    if (userCurrentEmail.isNotEmpty) {
+      await _userDataController.fetchOnTaskData(userCurrentEmail);
+      await _userDataController.fetchDoneTaskData(userCurrentEmail);
+      await _userDataController.fetchWaitingTaskData(userCurrentEmail);
+      await _userDataController.fetchTotalDoneTaskData(userCurrentEmail);
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {

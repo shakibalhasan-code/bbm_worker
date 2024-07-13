@@ -1,9 +1,36 @@
+import 'package:bbm_worker/core/models/ontask_model.dart';
+import 'package:bbm_worker/getx/user_data_controller.dart';
 import 'package:bbm_worker/views/item/todays_work_item.dart';
 import 'package:bbm_worker/views/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final UserDataController _userDataController = Get.put(UserDataController());
+  late String userCurrentEmail = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserAuth();
+  }
+
+  void fetchUserAuth() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    userCurrentEmail = prefs.getString('email') ?? '';
+
+    if (userCurrentEmail.isNotEmpty) {
+      await _userDataController.fetchOnTaskData(userCurrentEmail);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +40,7 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: CustomCard(
@@ -21,7 +48,7 @@ class HomeScreen extends StatelessWidget {
                     text: 'Total Reports',
                   ),
                 ),
-                const SizedBox(
+                 SizedBox(
                   width: 5,
                 ),
                 Expanded(
@@ -35,7 +62,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(
               height: 5,
             ),
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: CustomCard(
@@ -43,7 +70,7 @@ class HomeScreen extends StatelessWidget {
                     text: 'Waiting',
                   ),
                 ),
-                const SizedBox(
+                 SizedBox(
                   width: 5,
                 ),
                 Expanded(
@@ -65,12 +92,22 @@ class HomeScreen extends StatelessWidget {
               height: 5,
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: 5,
-                itemBuilder: (context, index) {
-                  return TodaysWorkItem();
-                },
-              ),
+              child: Obx(() {
+                final onTask = _userDataController.onTaskList;
+                if (onTask.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                } else {
+                  return ListView.builder(
+                    itemCount: onTask.length,
+                    itemBuilder: (context, index) {
+                      return TodaysWorkItem(
+                        ontask: onTask[index],
+                        index: index,
+                      );
+                    },
+                  );
+                }
+              }),
             ),
           ],
         ),

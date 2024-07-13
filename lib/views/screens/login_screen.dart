@@ -1,9 +1,10 @@
 import 'package:bbm_worker/stylish/app_colors.dart';
-import 'package:bbm_worker/views/screens/tab_screen.dart';
 import 'package:bbm_worker/views/widgets/custom_button.dart';
 import 'package:bbm_worker/views/widgets/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../getx/login_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,12 +16,18 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
+  final LoginController _loginController = Get.put(LoginController());
 
   @override
   void dispose() {
     super.dispose();
     _emailController.dispose();
     _passController.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -36,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
               right: 0,
               top: 0,
               bottom: 0,
-              child: Column(
+              child: Obx(() => Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
@@ -59,24 +66,35 @@ class _LoginScreenState extends State<LoginScreen> {
                   CustomTextField(
                       hintText: 'enter your password',
                       textEditingController: _passController,
-                      icon: Icons.key),
+                      icon: Icons.key,
+                      obscureText: true),
                   const SizedBox(height: 10),
                   GestureDetector(
-                    onTap: (){
-                      Get.offAll(const TabScreen());
+                    onTap: () {
+                      _loginController.login(
+                        _emailController.text.trim(),
+                        _passController.text.trim(),
+                      );
                     },
-                      child: const CustomThemeButton(buttonText: 'Login Now'))
+                    child: const CustomThemeButton(buttonText: 'Login Now'),
+                  ),
+                  if (_loginController.isLoading.value)
+                    const SizedBox(height: 20),
+                  if (_loginController.isLoading.value)
+                    const CircularProgressIndicator(),
                 ],
-              ),
+              )),
             ),
             const Positioned(
-                right: 0,
-                left: 0,
-                bottom: 20,
-                child: Text(
-                  'Emergency Call- 0123456789',textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ))
+              right: 0,
+              left: 0,
+              bottom: 20,
+              child: Text(
+                'Emergency Call- 0123456789',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+            ),
           ],
         ),
       ),

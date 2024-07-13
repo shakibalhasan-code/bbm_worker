@@ -1,9 +1,11 @@
+import 'package:bbm_worker/core/models/attendance_record.dart';
 import 'package:flutter/material.dart';
 
 import '../../stylish/app_colors.dart';
 
 class AttendanceItem extends StatelessWidget {
-  const AttendanceItem({super.key});
+  final AttendanceRecord attendanceRecord;
+  const AttendanceItem({super.key, required this.attendanceRecord});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +26,7 @@ class AttendanceItem extends StatelessWidget {
                 width: double.infinity,
                 child: Padding(
                   padding: EdgeInsets.all(8),
-                  child: Text('01-09-2024',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
+                  child: Text(attendanceRecord.date,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
                 ),
               ),
               Padding(padding: EdgeInsets.symmetric(horizontal: 10),
@@ -33,9 +35,9 @@ class AttendanceItem extends StatelessWidget {
                       Expanded(child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Attended: Yes',style: TextStyle(color: Colors.white),),
-                          Text('Location: Mirpur, Dhaka',style: TextStyle(color: Colors.white),),
-                          Text('Time: 09:30AM',style: TextStyle(color: Colors.white),),
+                          Text(attendanceRecord.attended ? 'Yes' : 'No',style: TextStyle(color: Colors.white),),
+                          Text(attendanceRecord.location,style: TextStyle(color: Colors.white),),
+                          Text(attendanceRecord.time,style: TextStyle(color: Colors.white),),
                         ],
                       )),
                     ],
