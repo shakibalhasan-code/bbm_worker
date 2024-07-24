@@ -1,12 +1,14 @@
 class WaitingModel {
-  final String address;
-  final String fullName;
-  final String message;
-  final String phoneNumber;
-  final String productCode;
-  final String productImage;
-  final String productName;
-  final String update;
+  String? address;
+  String? fullName;
+  String? message;
+  String? phoneNumber;
+  String? productCode;
+  String? productImage;
+  String? productName;
+  String? update;
+  String? type;
+  String documentId;
 
   WaitingModel({
     required this.address,
@@ -17,18 +19,22 @@ class WaitingModel {
     required this.productImage,
     required this.productName,
     required this.update,
+    required this.type,
+    required this.documentId,
   });
 
-  factory WaitingModel.fromFirestore(Map<String, dynamic> data) {
+  factory WaitingModel.fromFirestore(Map<String, dynamic>? data, String documentId) {
     return WaitingModel(
-      address: data['address'] ?? '',
-      fullName: data['fullName'] ?? '',
-      message: data['message'] ?? '',
-      phoneNumber: data['phoneNumber'] ?? '',
-      productCode: data['productCode'] ?? '',
-      productImage: data['productImage'] ?? '',
-      productName: data['productName'] ?? '',
-      update: data['update'] ?? '',
+      address: data?['address'] ?? '',
+      fullName: data?['fullName'] ?? '',
+      message: data?['message'] ?? '',
+      phoneNumber: data?['phoneNumber'] ?? '',
+      productCode: data?['productCode'] ?? '',
+      productImage: data?['productImage'] ?? '',
+      productName: data?['productName'] ?? '',
+      update: data?['update'] ?? '',
+      type: data?['issueCategory'] ?? '',
+      documentId: documentId,
     );
   }
 }

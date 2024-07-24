@@ -1,7 +1,6 @@
 import 'package:bbm_worker/stylish/app_colors.dart';
-import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_done_work.dart';
+import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_upcoming_work.dart';
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_todays_work.dart';
-import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_total_work_done.dart';
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_waiting_work.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,25 +25,23 @@ class _TotalReportState extends State<TotalReport> {
   @override
   void initState() {
     super.initState();
-    fetchUserAuth();
+    // fetchUserAuth();
   }
 
-  void fetchUserAuth() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    userCurrentEmail = prefs.getString('email') ?? '';
-    if (userCurrentEmail.isNotEmpty) {
-      await _userDataController.fetchOnTaskData(userCurrentEmail);
-      await _userDataController.fetchDoneTaskData(userCurrentEmail);
-      await _userDataController.fetchWaitingTaskData(userCurrentEmail);
-      await _userDataController.fetchTotalDoneTaskData(userCurrentEmail);
-    }
-  }
+  // void fetchUserAuth() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   userCurrentEmail = prefs.getString('email') ?? '';
+  //   if (userCurrentEmail.isNotEmpty) {
+  //     await _userDataController.fetchOnTaskData(userCurrentEmail);
+  //     await _userDataController.fetchTodayOnTaskData(userCurrentEmail);
+  //   }
+  // }
 
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 3,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -55,8 +52,7 @@ class _TotalReportState extends State<TotalReport> {
             tabs: [
               Tab(text: 'Today\'s Work'),
               Tab(text: 'Waiting'),
-              Tab(text: 'Done'),
-              Tab(text: 'Total Work Done'),
+              Tab(text: 'Upcoming'),
             ],
           ),
           Expanded(
@@ -64,8 +60,7 @@ class _TotalReportState extends State<TotalReport> {
               children: [
                 TabTodaysWork(),
                 TabWaitingWork(),
-                TabDoneWork(),
-                TabTotalDoneWork()
+                TabUpcomingWork(),
               ],
             ),
           ),

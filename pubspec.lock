@@ -568,6 +568,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
+  progress_dialog_null_safe:
+    dependency: "direct main"
+    description:
+      name: progress_dialog_null_safe
+      sha256: f7d452ba9b17bb60f32ee74170e1a2c4367eeb1c428b1626dfe343c70412e4ce
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   rxdart:
     dependency: transitive
     description:

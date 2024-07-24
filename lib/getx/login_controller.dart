@@ -35,7 +35,8 @@ class LoginController extends GetxController {
           .get();
 
       if (userDoc.exists) {
-        userModel.value = UserModel.fromFirestore(userDoc.data() as Map<String, dynamic>);
+        userModel.value =
+            UserModel.fromFirestore(userDoc.data() as Map<String, dynamic>);
         await _saveCredentials(email, password);
         Get.offAll(const TabScreen(), arguments: userModel.value);
       } else {
@@ -53,9 +54,17 @@ class LoginController extends GetxController {
         default:
           errorMessage = 'An error occurred. Please try again.';
       }
-      Get.snackbar('Error', errorMessage, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar(
+          'Error',
+          snackPosition: SnackPosition.BOTTOM,
+          errorMessage,
+          colorText: Colors.white);
     } catch (e) {
-      Get.snackbar('Error', e.toString(), backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar(
+          'Error',
+          snackPosition: SnackPosition.BOTTOM,
+          e.toString(),
+          colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -75,6 +84,4 @@ class LoginController extends GetxController {
       await login(email, password);
     }
   }
-
-
 }

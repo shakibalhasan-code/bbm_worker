@@ -127,10 +127,10 @@ class _AttendenceScreenState extends State<AttendenceScreen> {
         isAttended = true;
       });
 
-      Get.snackbar('Success', 'You\'re attended from now');
+      Get.snackbar('Success',backgroundColor: AppColors.appThemeColor,colorText: Colors.white, 'You\'re attended from now');
       fetchAttendanceRecords(); // Refresh the attendance records after marking attendance
     } else {
-      Get.snackbar('Permission Denied',
+      Get.snackbar('Permission Denied',backgroundColor: Colors.red,colorText: Colors.white,
           'Location permission is required to mark attendance');
     }
   }

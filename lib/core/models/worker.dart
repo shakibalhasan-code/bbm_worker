@@ -15,11 +15,11 @@ class UserModel {
 
   factory UserModel.fromFirestore(Map<String, dynamic> data) {
     return UserModel(
-      fullName: data['fullName'],
-      email: data['email'],
-      imageUrl: data['imageUrl'],
-      phone: data['phone'],
-      role: data['role'],
+      fullName: data['fullName'] ?? '',
+      email: data['email'] ?? '',
+      imageUrl: data['imageUrl'] ?? '',
+      phone: data['phone'] ?? '',
+      role: data['role'] ?? '',
     );
   }
 }

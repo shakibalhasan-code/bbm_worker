@@ -1,4 +1,4 @@
-class OnTaskModel {
+class UpcommingModel {
   final String address;
   final String fullName;
   final String message;
@@ -13,7 +13,7 @@ class OnTaskModel {
   final String selectedTime;
 
 
-  OnTaskModel({
+  UpcommingModel({
     required this.address,
     required this.fullName,
     required this.message,
@@ -28,20 +28,20 @@ class OnTaskModel {
     required this.selectedTime
   });
 
-  factory OnTaskModel.fromFirestore(Map<String, dynamic> data, String documentId) {
-    return OnTaskModel(
-      address: data['address'] ?? '',
-      fullName: data['fullName'] ?? '',
-      message: data['message'] ?? '',
-      phoneNumber: data['phoneNumber'] ?? '',
-      productCode: data['productCode'] ?? '',
-      productImage: data['productImage'] ?? '',
-      productName: data['productName'] ?? '',
-      update: data['update'] ?? '',
-      type: data['issueCategory'] ?? '',
-      documentId: documentId,
-      selectedDate: data['selectedDate'],
-      selectedTime: data['selectedTime']
+  factory UpcommingModel.fromFirestore(Map<String, dynamic> data, String documentId) {
+    return UpcommingModel(
+        address: data['address'] ?? '',
+        fullName: data['fullName'] ?? '',
+        message: data['message'] ?? '',
+        phoneNumber: data['phoneNumber'] ?? '',
+        productCode: data['productCode'] ?? '',
+        productImage: data['productImage'] ?? '',
+        productName: data['productName'] ?? '',
+        update: data['update'] ?? '',
+        type: data['issueCategory'] ?? '',
+        documentId: documentId,
+        selectedDate: data['selectedDate'],
+        selectedTime: data['selectedTime']
     );
   }
 }

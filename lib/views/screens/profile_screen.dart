@@ -1,9 +1,34 @@
+import 'package:bbm_worker/getx/profile_controller.dart';
 import 'package:bbm_worker/stylish/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../item/reviews_item.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  
+  final ProfileController _profileController = ProfileController();
+  late String userCurrentEmail = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWorkerData();
+  }
+
+  void _fetchWorkerData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    userCurrentEmail = prefs.getString('email') ?? '';
+    if(userCurrentEmail.isNotEmpty){
+      _profileController.fetchUserData(userCurrentEmail);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

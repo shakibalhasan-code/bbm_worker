@@ -29,13 +29,13 @@ class AttendanceItem extends StatelessWidget {
                   child: Text(attendanceRecord.date,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
                 ),
               ),
-              Padding(padding: EdgeInsets.symmetric(horizontal: 10),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 10,vertical: 3),
                   child:Row(
                     children: [
                       Expanded(child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(attendanceRecord.attended ? 'Yes' : 'No',style: TextStyle(color: Colors.white),),
+                          Text(attendanceRecord.attended ? 'Attended: ' 'Yes' : 'No',style: TextStyle(color: Colors.white),),
                           Text(attendanceRecord.location,style: TextStyle(color: Colors.white),),
                           Text(attendanceRecord.time,style: TextStyle(color: Colors.white),),
                         ],

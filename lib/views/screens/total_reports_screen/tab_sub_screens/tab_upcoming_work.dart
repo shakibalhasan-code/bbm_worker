@@ -1,17 +1,21 @@
+import 'package:bbm_worker/views/item/upcoming_task_item.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../getx/user_data_controller.dart';
 import '../../../item/todays_work_item.dart';
 
-class TabTodaysWork extends StatefulWidget {
-  TabTodaysWork({super.key});
+class TabUpcomingWork extends StatefulWidget {
+  TabUpcomingWork({super.key});
 
   @override
-  State<TabTodaysWork> createState() => _TabTodaysWorkState();
+  State<TabUpcomingWork> createState() => _TabUpcomingWorkState();
 }
 
-class _TabTodaysWorkState extends State<TabTodaysWork> {
+class _TabUpcomingWorkState extends State<TabUpcomingWork> {
   final UserDataController _userDataController = Get.put(UserDataController());
   late String userCurrentEmail='';
 
@@ -25,9 +29,11 @@ class _TabTodaysWorkState extends State<TabTodaysWork> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     userCurrentEmail = prefs.getString('email') ?? '';
     if (userCurrentEmail.isNotEmpty) {
-      await _userDataController.fetchTodayOnTaskData(userCurrentEmail);
+      await _userDataController.fetchUpcomingOnTaskData(userCurrentEmail);
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -38,25 +44,14 @@ class _TabTodaysWorkState extends State<TabTodaysWork> {
           children: [
             Expanded(
               child: Obx(() {
-                final onTask = _userDataController.onTaskList;
-                if (onTask.isEmpty) {
-                  return const Center(
-                    child: Text('Maybe no work', style: TextStyle(color: Colors.white)),
-                  );
+                final onDone = _userDataController.upcomingList;
+                if (onDone.isEmpty) {
+                  return const Center(child: Text('No Upcoming Complaints found',style: TextStyle(color: Colors.white),));
                 } else {
                   return ListView.builder(
-                    itemCount: onTask.length,
+                    itemCount: onDone.length,
                     itemBuilder: (context, index) {
-                      return TodaysWorkItem(
-                        onTaskModel: onTask[index],
-                        onTaskStarted: () {
-                          // Handle task started logic
-                        },
-                        onTaskEnded: () {
-                          // Handle task ended logic
-                        },
-                        workerEmail: userCurrentEmail,
-                      );
+                      return UpCommingTask(upcommingModel: onDone[index]); // Pass WaitingModel
                     },
                   );
                 }

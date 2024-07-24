@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 class CustomCard extends StatelessWidget {
   final IconData icon;
   final String text;
-  const CustomCard({super.key, required this.icon, required this.text});
+  final int number;
+  const CustomCard({super.key, required this.icon, required this.text, required this.number});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +36,7 @@ class CustomCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Text('10',style: TextStyle(fontSize: 20,color: Colors.white,fontWeight: FontWeight.bold),)
+                Text(number.toString(),style: TextStyle(fontSize: 20,color: Colors.white,fontWeight: FontWeight.bold),)
               ],
             ),
             const SizedBox(height: 10),

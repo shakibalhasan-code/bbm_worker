@@ -1,4 +1,3 @@
-import 'package:bbm_worker/core/models/ontask_model.dart';
 import 'package:bbm_worker/getx/user_data_controller.dart';
 import 'package:bbm_worker/views/item/todays_work_item.dart';
 import 'package:bbm_worker/views/widgets/custom_card.dart';
@@ -28,7 +27,10 @@ class _HomeScreenState extends State<HomeScreen> {
     userCurrentEmail = prefs.getString('email') ?? '';
 
     if (userCurrentEmail.isNotEmpty) {
-      await _userDataController.fetchOnTaskData(userCurrentEmail);
+      await _userDataController.fetchTodayOnTaskData(userCurrentEmail);
+      await _userDataController.fetchUpcomingOnTaskData(userCurrentEmail);
+      await _userDataController.fetchWaitingOnTaskData(userCurrentEmail);
+      await _userDataController.fetchReviewData(userCurrentEmail);
     }
   }
 
@@ -40,44 +42,56 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Expanded(
-                  child: CustomCard(
-                    icon: Icons.report,
-                    text: 'Total Reports',
-                  ),
+                  child: Obx(() {
+                    return CustomCard(
+                      icon: Icons.report,
+                      text: 'Today\'s Work',
+                      number: _userDataController.todayWorkCount.value,
+                    );
+                  }),
                 ),
-                 SizedBox(
+                const SizedBox(
                   width: 5,
                 ),
                 Expanded(
-                  child: CustomCard(
-                    icon: Icons.timelapse_rounded,
-                    text: 'Todays Work',
-                  ),
+                  child: Obx(() {
+                    return CustomCard(
+                      icon: Icons.timelapse_rounded,
+                      text: 'Upcoming',
+                      number: _userDataController.upcomingWorkCount.value,
+                    );
+                  }),
                 ),
               ],
             ),
             const SizedBox(
               height: 5,
             ),
-            const Row(
+            Row(
               children: [
                 Expanded(
-                  child: CustomCard(
-                    icon: Icons.watch_later,
-                    text: 'Waiting',
-                  ),
+                  child: Obx(() {
+                    return CustomCard(
+                      icon: Icons.watch_later,
+                      text: 'Waiting',
+                      number: _userDataController.waitingWorkCount.value,
+                    );
+                  }),
                 ),
-                 SizedBox(
+                const SizedBox(
                   width: 5,
                 ),
                 Expanded(
-                  child: CustomCard(
-                    icon: Icons.calendar_month_rounded,
-                    text: 'Todays Work',
-                  ),
+                  child: Obx(() {
+                    return CustomCard(
+                      icon: Icons.calendar_month_rounded,
+                      text: 'Total Review',
+                      number: _userDataController.reviewCount.value,
+                    );
+                  }),
                 ),
               ],
             ),
@@ -95,14 +109,20 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Obx(() {
                 final onTask = _userDataController.onTaskList;
                 if (onTask.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: Text('Maybe no work',style: TextStyle(color: Colors.white),));
                 } else {
                   return ListView.builder(
                     itemCount: onTask.length,
                     itemBuilder: (context, index) {
                       return TodaysWorkItem(
-                        ontask: onTask[index],
-                        index: index,
+                        onTaskModel: onTask[index],
+                        onTaskStarted: (){
+
+                        },
+                        onTaskEnded: (){
+
+                        },
+                        workerEmail: userCurrentEmail,
                       );
                     },
                   );

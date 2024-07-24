@@ -19,7 +19,8 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       theme: ThemeData(
         useMaterial3: true,
-        primaryColor: AppColors.appThemeColor
+        primaryColor: AppColors.appThemeColor,
+        secondaryHeaderColor: Colors.white
       ),
       home: const SplashScreen(),
     );
