@@ -11,6 +11,7 @@ class UserDataController extends GetxController {
   var onTaskList = <OnTaskModel>[].obs;
   var waitingList = <WaitingModel>[].obs;
   var upcomingList = <UpcommingModel>[].obs;
+  var doneList = <DoneTaskModel>[].obs;
 
   var todayWorkCount = 0.obs;
   var upcomingWorkCount = 0.obs;
@@ -33,7 +34,8 @@ class UserDataController extends GetxController {
         final data = documentSnapshot.data() as Map<String, dynamic>;
         final task = OnTaskModel.fromFirestore(data, documentSnapshot.id);
         onTaskList.value = [task];
-        todayWorkCount.value = 1; // Since it's fetching today's work by specific date
+        todayWorkCount.value =
+            1; // Since it's fetching today's work by specific date
       } else {
         print('Document not found for $userEmail on $docId');
         onTaskList.value = [];
@@ -99,6 +101,36 @@ class UserDataController extends GetxController {
       rethrow;
     }
   }
+
+  // Future<void> fetchDoneOnTaskData(String userEmail) async {
+  //   try {
+  //     // Fetch documents from 'doneComplaints' subcollection
+  //     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+  //         .collection('workers')
+  //         .doc(userEmail)
+  //         .collection('doneComplaints')
+  //         .get();
+  //
+  //     // Check if documents exist and map to DoneTaskModel
+  //     if (querySnapshot.docs.isNotEmpty) {
+  //       List<DoneTaskModel> tasks = querySnapshot.docs.map((doc) {
+  //         var documentId = doc.id;
+  //         var data = doc.data() as Map<String, dynamic>;
+  //         return DoneTaskModel.fromFirestore(data, documentId);
+  //       }).toList();
+  //       doneList.value = tasks;
+  //     } else {
+  //       // No documents found, clear doneList
+  //       print('No done documents found for $userEmail');
+  //       doneList.value = [];
+  //     }
+  //   } catch (e) {
+  //     print('Error fetching done onTask data: $e');
+  //     // Handle error appropriately
+  //   } finally {
+  //     // Reset loading state if needed
+  //   }
+  // }
 
   Future<void> removeWaitingTask(String userEmail, String documentId) async {
     try {

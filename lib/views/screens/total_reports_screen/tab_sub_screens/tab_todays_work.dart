@@ -49,12 +49,6 @@ class _TabTodaysWorkState extends State<TabTodaysWork> {
                     itemBuilder: (context, index) {
                       return TodaysWorkItem(
                         onTaskModel: onTask[index],
-                        onTaskStarted: () {
-                          // Handle task started logic
-                        },
-                        onTaskEnded: () {
-                          // Handle task ended logic
-                        },
                         workerEmail: userCurrentEmail,
                       );
                     },

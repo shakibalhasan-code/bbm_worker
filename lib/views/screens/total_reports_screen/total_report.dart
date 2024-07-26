@@ -1,4 +1,5 @@
 import 'package:bbm_worker/stylish/app_colors.dart';
+import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_done_work.dart';
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_upcoming_work.dart';
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_todays_work.dart';
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_waiting_work.dart';
@@ -41,7 +42,7 @@ class _TotalReportState extends State<TotalReport> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -53,6 +54,7 @@ class _TotalReportState extends State<TotalReport> {
               Tab(text: 'Today\'s Work'),
               Tab(text: 'Waiting'),
               Tab(text: 'Upcoming'),
+              Tab(text: 'Done'),
             ],
           ),
           Expanded(
@@ -61,6 +63,7 @@ class _TotalReportState extends State<TotalReport> {
                 TabTodaysWork(),
                 TabWaitingWork(),
                 TabUpcomingWork(),
+                TabDoneWork()
               ],
             ),
           ),

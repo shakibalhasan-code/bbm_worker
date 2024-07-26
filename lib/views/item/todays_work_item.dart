@@ -10,14 +10,11 @@ import '../../core/models/ontask_model.dart';
 class TodaysWorkItem extends StatefulWidget {
   final OnTaskModel onTaskModel;
   final String workerEmail;
-  final VoidCallback onTaskStarted, onTaskEnded;
 
   const TodaysWorkItem({
     super.key,
     required this.onTaskModel,
     required this.workerEmail,
-    required this.onTaskStarted,
-    required this.onTaskEnded,
   });
 
   @override
@@ -87,6 +84,31 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
   }
 
   Future<void> _storeDataToFirestore() async {
+
+    final reportsData = {
+      'workerName': _profileController.user.value.fullName,
+      'workerEmail': _profileController.user.value.email,
+      'workerPhone': _profileController.user.value.phone,
+      'workerImage': _profileController.user.value.imageUrl,
+      'customerName': widget.onTaskModel.fullName,
+      'customerPhone': widget.onTaskModel.phoneNumber,
+      'productImage': widget.onTaskModel.productImage,
+      'productCode': widget.onTaskModel.productCode,
+      'address': widget.onTaskModel.address
+    };
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    final selectedDateDoc = FirebaseFirestore.instance.collection('reports').doc(_selectedDate);
+
+    // Add reports data
+    await selectedDateDoc.collection(widget.workerEmail).add(reportsData);
+
+    // Update subcollection tracking document
+    await selectedDateDoc.set({
+      'subcollections': FieldValue.arrayUnion([widget.workerEmail])
+    }, SetOptions(merge: true));
+
     final data = {
       'address': widget.onTaskModel.address,
       'fullName': widget.onTaskModel.fullName,
@@ -143,28 +165,13 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
           .doc(widget.onTaskModel.documentId)
           .update({'done': true});
 
-      final reportsData= {
-        'workerName': _profileController.user.value.fullName,
-        'workerEmail': _profileController.user.value.email,
-        'workerPhone': _profileController.user.value.phone,
-        'workerImage': _profileController.user.value.imageUrl,
 
-        'customerName':widget.onTaskModel.fullName,
-        'customerPhone':widget.onTaskModel.phoneNumber,
-        'productImage': widget.onTaskModel.productImage,
-        'productCode': widget.onTaskModel.productCode,
-        'address': widget.onTaskModel.address
-      };
-
-      await FirebaseFirestore.instance
-      .collection('reports')
-      .doc(_selectedDate)
-      .set(reportsData);
 
     } catch (e) {
       print(e);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -1,14 +1,14 @@
 class DoneTaskModel {
-  final String address;
-  final String fullName;
-  final String message;
-  final String phoneNumber;
-  final String productCode;
-  final String productImage;
-  final String productName;
-  final String update;
-  final String type;
-
+  String address;
+  String fullName;
+  String message;
+  String phoneNumber;
+  String productCode;
+  String productImage;
+  String productName;
+  String update;
+  String type;
+  String date;
 
   DoneTaskModel({
     required this.address,
@@ -19,8 +19,8 @@ class DoneTaskModel {
     required this.productImage,
     required this.productName,
     required this.update,
-    required this.type
-
+    required this.type,
+    required this.date
   });
 
   factory DoneTaskModel.fromFirestore(Map<String, dynamic> data) {
@@ -33,8 +33,8 @@ class DoneTaskModel {
       productImage: data['productImage'] ?? '',
       productName: data['productName'] ?? '',
       update: data['update'] ?? '',
-        type: data['issueCategory']
-
+      type: data['issueCategory'] ?? '',
+      date: data['selectedDate'] ?? ''
     );
   }
 }
