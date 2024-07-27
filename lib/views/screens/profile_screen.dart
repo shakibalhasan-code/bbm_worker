@@ -1,6 +1,10 @@
+import 'package:bbm_worker/core/models/reiview_model.dart';
 import 'package:bbm_worker/getx/profile_controller.dart';
 import 'package:bbm_worker/stylish/app_colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../item/reviews_item.dart';
 
@@ -12,9 +16,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  
   final ProfileController _profileController = ProfileController();
   late String userCurrentEmail = '';
+  List<ReviewModel> reviewList = [];
 
   @override
   void initState() {
@@ -25,9 +29,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _fetchWorkerData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     userCurrentEmail = prefs.getString('email') ?? '';
-    if(userCurrentEmail.isNotEmpty){
+    if (userCurrentEmail.isNotEmpty) {
       _profileController.fetchUserData(userCurrentEmail);
     }
+  }
+
+  Future<List<ReviewModel>> fetchReviews() async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+        .collection('workers')
+        .doc(userCurrentEmail)
+        .collection('reviews')
+        .get();
+
+    return querySnapshot.docs
+        .map((doc) => ReviewModel.fromFirestore(doc))
+        .toList();
   }
 
   @override
@@ -37,7 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: const Text('My Profile'),
         backgroundColor: AppColors.appThemeColor.withOpacity(0.4),
-        titleTextStyle: const TextStyle(color: Colors.white,fontSize: 20),
+        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -58,38 +74,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        height: 100,
-                        width: 100,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: Image.network(
-                            'https://st.depositphotos.com/34181562/60060/i/450/depositphotos_600606366-stock-photo-professional-engineer-black-women-working.jpg',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
+                      Obx(() {
+                        if (_profileController.user.value.imageUrl.isEmpty) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else {
+                          return SizedBox(
+                            height: 100,
+                            width: 100,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: CachedNetworkImage(
+                                imageUrl: _profileController.user.value.imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                errorWidget: (context, url, error) => Icon(Icons.error),
+                              ),
+                            ),
+                          );
+                        }
+                      }),
                       const SizedBox(height: 5),
-                      Text(
-                        'Inmur Rashid',
-                        style: TextStyle(fontSize: 20, color: Colors.white),
-                      ),
-                      Text(
-                        'Junior Engineer',
-                        style: TextStyle(fontSize: 15, color: Colors.white),
-                      ),
-                      Text(
-                        'inmur@gmail.com',
-                        style: TextStyle(fontSize: 15, color: Colors.white),
-                      ),
+                      Obx(() {
+                        return Text(
+                          _profileController.user.value.fullName,
+                          style: TextStyle(fontSize: 20, color: Colors.white),
+                        );
+                      }),
+                      Obx(() {
+                        return Text(
+                          _profileController.user.value.role,
+                          style: TextStyle(fontSize: 15, color: Colors.white),
+                        );
+                      }),
+                      Obx(() {
+                        return Text(
+                          _profileController.user.value.email,
+                          style: TextStyle(fontSize: 15, color: Colors.white),
+                        );
+                      }),
                       const SizedBox(height: 5),
                       Divider(color: Colors.white, thickness: 1, endIndent: 1),
-                      ListView.builder(
-                        itemCount: 10,
-                        shrinkWrap: true, // Add shrinkWrap to make the ListView take only the required space
-                        physics: NeverScrollableScrollPhysics(), // Disable the ListView's own scrolling
-                        itemBuilder: (context, index) {
-                          return ReviewsItem();
+                      FutureBuilder<List<ReviewModel>>(
+                        future: fetchReviews(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Center(child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Center(child: Text('Something went wrong',style: TextStyle(color: Colors.grey),));
+                          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                            return Center(child: Text('No reviews found',style: TextStyle(color: Colors.grey)));
+                          } else {
+                            final reviews = snapshot.data!;
+                            return ListView.builder(
+                              itemCount: reviews.length,
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                return ReviewsItem(reviewModel: reviews[index]);
+                              },
+                            );
+                          }
                         },
                       ),
                     ],

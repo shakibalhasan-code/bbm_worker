@@ -38,10 +38,10 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
     fetchUserData();
   }
 
-  void fetchUserData() async{
+  void fetchUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     currentEmail = prefs.getString('email') ?? '';
-    if(currentEmail.isNotEmpty){
+    if (currentEmail.isNotEmpty) {
       _profileController.fetchUserData(currentEmail);
     }
   }
@@ -84,7 +84,6 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
   }
 
   Future<void> _storeDataToFirestore() async {
-
     final reportsData = {
       'workerName': _profileController.user.value.fullName,
       'workerEmail': _profileController.user.value.email,
@@ -99,7 +98,8 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
 
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    final selectedDateDoc = FirebaseFirestore.instance.collection('reports').doc(_selectedDate);
+    final selectedDateDoc =
+        FirebaseFirestore.instance.collection('reports').doc(_selectedDate);
 
     // Add reports data
     await selectedDateDoc.collection(widget.workerEmail).add(reportsData);
@@ -122,6 +122,26 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       'selectedDate': _selectedDate,
     };
 
+    final cdata = {
+      'address': widget.onTaskModel.address,
+      'fullName': widget.onTaskModel.fullName,
+      'message': widget.onTaskModel.message,
+      'phoneNumber': widget.onTaskModel.phoneNumber,
+      'productCode': widget.onTaskModel.productCode,
+      'productImage': widget.onTaskModel.productImage,
+      'productName': widget.onTaskModel.productName,
+      'update': widget.onTaskModel.update,
+      'type': widget.onTaskModel.type,
+      'endedDate': _selectedDate,
+
+      'workerName': _profileController.user.value.fullName,
+      'workerPhone': _profileController.user.value.phone,
+      'workerImage': _profileController.user.value.imageUrl,
+      'workerRole': _profileController.user.value.role,
+      'workerEmail': _profileController.user.value.email
+    };
+
+
     // final now = DateTime.now();
     // final docId = DateFormat('yyyy-MM-dd').format(now);
 
@@ -143,21 +163,8 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
           .collection('customers')
           .doc(widget.onTaskModel.phoneNumber)
           .collection('doneComplaints')
-          .add(data);
+          .add(cdata);
 
-      // await FirebaseFirestore.instance
-      //     .collection('workers')
-      //     .doc(widget.workerEmail)
-      //     .collection('complaints')
-      //     .doc(widget.onTaskModel.documentId)
-      //     .delete();
-
-      await FirebaseFirestore.instance
-          .collection('workers')
-          .doc(widget.workerEmail)
-          .collection('upComing')
-          .doc(widget.onTaskModel.documentId)
-          .delete();
       await FirebaseFirestore.instance
           .collection('customers')
           .doc(widget.onTaskModel.phoneNumber)
@@ -166,12 +173,24 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
           .update({'done': true});
 
 
+      await FirebaseFirestore.instance
+          .collection('workers')
+          .doc(widget.workerEmail)
+          .collection('upComing')
+          .doc(widget.onTaskModel.documentId)
+          .delete();
+
+      // await FirebaseFirestore.instance
+      //     .collection('workers')
+      //     .doc(widget.workerEmail)
+      //     .collection('complaints')
+      //     .doc(widget.onTaskModel.documentId)
+      //     .delete();
 
     } catch (e) {
       print(e);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -266,5 +285,4 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       ),
     );
   }
-
 }
