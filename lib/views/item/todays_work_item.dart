@@ -2,6 +2,7 @@ import 'package:bbm_worker/core/models/worker.dart';
 import 'package:bbm_worker/getx/profile_controller.dart';
 import 'package:bbm_worker/stylish/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,14 +24,17 @@ class TodaysWorkItem extends StatefulWidget {
 
 class _TodaysWorkItemState extends State<TodaysWorkItem> {
   String _selectedDate = 'Not set';
+  String _selectedTime = 'Not set';
+  String _todayTime = 'Not set';
   final ProfileController _profileController = ProfileController();
   late String currentEmail;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> _selectDate(BuildContext context) async {
-    final now = DateTime.now();
-    final docId = DateFormat('yyyy-MM-dd').format(now);
-    _selectedDate = docId;
-  }
+  // Future<void> _selectDate(BuildContext context) async {
+  //   final now = DateTime.now();
+  //   final docId = DateFormat('yyyy-MM-dd').format(now);
+  //   _selectedDate = docId;
+  // }
 
   @override
   void initState() {
@@ -46,26 +50,44 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
     }
   }
 
-  // Future<void> _selectTime(BuildContext context) async {
-  //   final TimeOfDay? picked = await showTimePicker(
-  //     context: context,
-  //     initialTime: TimeOfDay.now(),
-  //   );
-  //   if (picked != null) {
-  //     setState(() {
-  //       _selectedTime = picked.format(context);
-  //     });
-  //   }
-  // }
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = DateFormat('yyyy-MM-dd').format(picked);
+      });
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedTime = picked.format(context);
+      });
+    }
+  }
 
   void _showPopupMenu() {
     showMenu(
       context: context,
       position: RelativeRect.fromLTRB(100, 100, 0, 0),
-      items: [
+      items: const [
         PopupMenuItem(
           value: 'done',
           child: Text('Mark as done'),
+        ),
+        PopupMenuItem(
+          value: 'changeDate',
+          child: Text('Change Schedule'),
         ),
         PopupMenuItem(
           value: 'call',
@@ -79,8 +101,72 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
         });
       } else if (value == 'call') {
         // Implement call functionality here
+        // Implement call functionality here
+        FlutterPhoneDirectCaller.callNumber(widget.onTaskModel.phoneNumber);
+      } else if (value == 'changeDate') {
+        _selectDate(context).then((_) {
+          _selectTime(context).then((_) {
+            if(_selectedDate.isNotEmpty && _selectedTime.isNotEmpty ){
+              _updateSchedule();
+            }else{
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please Select a date '),
+                ),
+              );
+            }
+          });
+        });
       }
     });
+  }
+
+  Future<void> _updateSchedule() async {
+
+    final data = {
+      'address': widget.onTaskModel.address,
+      'fullName': widget.onTaskModel.fullName,
+      'message': widget.onTaskModel.message,
+      'phoneNumber': widget.onTaskModel.phoneNumber,
+      'productCode': widget.onTaskModel.productCode,
+      'productImage': widget.onTaskModel.productImage,
+      'productName': widget.onTaskModel.productName,
+      'update': widget.onTaskModel.update,
+      'issueCategory': widget.onTaskModel.type,
+      'selectedDate': _selectedDate,
+      'selectedTime': _selectedTime,
+    };
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('workers')
+          .doc(widget.workerEmail)
+          .collection('upComing')
+          .doc(_selectedDate)
+          .set(data);
+
+      await _firestore.collection('workers')
+          .doc(widget.workerEmail)
+          .collection('upComing')
+          .doc(widget.onTaskModel.documentId)
+          .delete();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Updated Schedule '),
+        ),
+      );
+
+
+    }catch(e){
+      print('error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+          content: Text('Enable to Updated Schedule  $e'),
+        ),
+      );
+    }
+
   }
 
   Future<void> _storeDataToFirestore() async {
@@ -96,10 +182,12 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       'address': widget.onTaskModel.address
     };
 
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime
+        .now()
+        .millisecondsSinceEpoch;
 
     final selectedDateDoc =
-        FirebaseFirestore.instance.collection('reports').doc(_selectedDate);
+    FirebaseFirestore.instance.collection('reports').doc(_selectedDate);
 
     // Add reports data
     await selectedDateDoc.collection(widget.workerEmail).add(reportsData);
@@ -133,14 +221,12 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       'update': widget.onTaskModel.update,
       'type': widget.onTaskModel.type,
       'endedDate': _selectedDate,
-
       'workerName': _profileController.user.value.fullName,
       'workerPhone': _profileController.user.value.phone,
       'workerImage': _profileController.user.value.imageUrl,
       'workerRole': _profileController.user.value.role,
       'workerEmail': _profileController.user.value.email
     };
-
 
     // final now = DateTime.now();
     // final docId = DateFormat('yyyy-MM-dd').format(now);
@@ -172,7 +258,6 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
           .doc(widget.onTaskModel.documentId)
           .update({'done': true});
 
-
       await FirebaseFirestore.instance
           .collection('workers')
           .doc(widget.workerEmail)
@@ -186,7 +271,6 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       //     .collection('complaints')
       //     .doc(widget.onTaskModel.documentId)
       //     .delete();
-
     } catch (e) {
       print(e);
     }

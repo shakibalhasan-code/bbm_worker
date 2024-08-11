@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
@@ -26,6 +28,7 @@ class WaitingWorkItem extends StatefulWidget {
 
 class _WaitingWorkItemState extends State<WaitingWorkItem> {
   final UserDataController _userDataController = Get.find<UserDataController>();
+
   String _selectedDate = 'Not set';
   String _selectedTime = 'Not set';
 
@@ -55,16 +58,22 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
     }
   }
 
+// Your existing code with suggested improvements...
   void _showPopupMenu() {
     final RenderBox renderBox = context.findRenderObject() as RenderBox;
     final Offset offset = renderBox.localToGlobal(Offset.zero);
     showMenu(
       context: context,
-      position: RelativeRect.fromLTRB(offset.dx, offset.dy, offset.dx + 40, offset.dy + 40),
-      items: [
+      position: RelativeRect.fromLTRB(
+          offset.dx, offset.dy, offset.dx + 40, offset.dy + 40),
+      items: const [
         PopupMenuItem(
           value: 'schedule',
           child: Text('Set Schedule'),
+        ),
+        PopupMenuItem(
+          value: 'unsolved',
+          child: Text('Set Unsolved'),
         ),
         PopupMenuItem(
           value: 'call',
@@ -75,13 +84,62 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
       if (value == 'schedule') {
         _selectDate(context).then((_) {
           _selectTime(context).then((_) {
-            _storeDataToFirestore();
+            if(_selectedDate.isNotEmpty && _selectedTime.isNotEmpty ){
+              _storeDataToFirestore();
+            }else{
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please Select a date '),
+                ),
+              );
+            }
           });
         });
       } else if (value == 'call') {
-        // Implement call functionality here
+        if (widget.waitingModel.phoneNumber != null) {
+          FlutterPhoneDirectCaller.callNumber(widget.waitingModel.phoneNumber!);
+        } else {
+          Get.snackbar('Failed to call', 'Sorry, phone number is empty');
+        }
+      } else if (value == 'unsolved') {
+        _storeDataToUnsolve();
       }
     });
+  }
+
+  Future<void> _storeDataToUnsolve() async {
+    final now = DateTime.now();
+    final formatter = DateFormat('yyyy-MM-dd'); // Format as needed
+    final formattedDate = formatter.format(now);
+    final data = {
+      'address': widget.waitingModel.address,
+      'fullName': widget.waitingModel.fullName,
+      'message': widget.waitingModel.message,
+      'phoneNumber': widget.waitingModel.phoneNumber,
+      'productCode': widget.waitingModel.productCode,
+      'productImage': widget.waitingModel.productImage,
+      'productName': widget.waitingModel.productName,
+      'update': widget.waitingModel.update,
+      'issueCategory': widget.waitingModel.type,
+      'unsolvedDate': formattedDate,
+      'workerEmail': widget.workerEmail,
+    };
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('unsolved')
+          .doc(_selectedDate)
+          .set(data);
+
+      await _userDataController.removeWaitingTask(
+          widget.workerEmail, widget.waitingModel.documentId);
+    } catch (e) {
+      print('unsolved: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to store data: $e')),
+      );
+    }
+
   }
 
   Future<void> _storeDataToFirestore() async {
@@ -114,14 +172,21 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
           .doc(_selectedDate)
           .set(data);
 
-      await _userDataController.removeWaitingTask(widget.workerEmail, widget.waitingModel.documentId);
-
       await FirebaseFirestore.instance
           .collection('customers')
           .doc(widget.waitingModel.phoneNumber)
           .collection('complaints')
           .doc(widget.waitingModel.documentId)
-          .update({'selectedDate': _selectedDate, 'selectedTime': _selectedTime});
+          .update(
+              {'selectedDate': _selectedDate, 'selectedTime': _selectedTime});
+
+      await _userDataController.removeWaitingTask(
+          widget.workerEmail, widget.waitingModel.documentId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Successfully Saved'),
+        ),
+      );
     } catch (e) {
       print(e);
     }

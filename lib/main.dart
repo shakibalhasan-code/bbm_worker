@@ -21,6 +21,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         primaryColor: AppColors.appThemeColor,
         secondaryHeaderColor: Colors.white
+
       ),
       home: const SplashScreen(),
     );

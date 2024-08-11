@@ -6,7 +6,8 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback card1Pressed,card2Pressed,card3Pressed,card4Pressed;
+  const HomeScreen({super.key, required this.card1Pressed, required this.card2Pressed, required this.card3Pressed, required this.card4Pressed});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -50,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.report,
                       text: 'Today\'s Work',
                       number: _userDataController.todayWorkCount.value,
+                      onTap: widget.card1Pressed,
                     );
                   }),
                 ),
@@ -62,6 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.timelapse_rounded,
                       text: 'Upcoming',
                       number: _userDataController.upcomingWorkCount.value,
+                      onTap: widget.card2Pressed,
+
                     );
                   }),
                 ),
@@ -78,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.watch_later,
                       text: 'Waiting',
                       number: _userDataController.waitingWorkCount.value,
+                      onTap: widget.card3Pressed,
                     );
                   }),
                 ),
@@ -90,6 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.calendar_month_rounded,
                       text: 'Total Review',
                       number: _userDataController.reviewCount.value,
+                      onTap: widget.card4Pressed,
+
                     );
                   }),
                 ),

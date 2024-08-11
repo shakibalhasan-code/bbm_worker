@@ -13,15 +13,39 @@ class TabScreen extends StatefulWidget {
 }
 
 class _TabScreenState extends State<TabScreen> {
-
-   List<Widget> screens = const [
-    HomeScreen(),
-    TotalReport(),
-    AttendenceScreen(),
-    ProfileScreen()
-  ];
-
   int currentIndex = 0;
+
+  final List<Widget> screens = [];
+
+  @override
+  void initState() {
+    super.initState();
+    screens.addAll([
+      HomeScreen(
+        card1Pressed: () {
+          changeIndex(1); // Change index to the "Reports" screen
+        },
+        card2Pressed: () {
+          changeIndex(1); // Change index to the "Attendance" screen
+        },
+        card3Pressed: () {
+          changeIndex(1); // Change index to the "Profile" screen
+        },
+        card4Pressed: () {
+          changeIndex(1);
+        },
+      ),
+      TotalReport(),
+      AttendenceScreen(),
+      ProfileScreen(),
+    ]);
+  }
+
+  void changeIndex(int index) {
+    setState(() {
+      currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +53,7 @@ class _TabScreenState extends State<TabScreen> {
       appBar: AppBar(
         title: const Text('BBM Engineers'),
         backgroundColor: AppColors.appThemeColor,
-        titleTextStyle: const TextStyle(fontSize: 20,color: Colors.white),
+        titleTextStyle: const TextStyle(fontSize: 20, color: Colors.white),
       ),
       backgroundColor: AppColors.appThemeColor.withOpacity(0.3),
       bottomNavigationBar: BottomNavigationBar(
@@ -37,9 +61,7 @@ class _TabScreenState extends State<TabScreen> {
         unselectedItemColor: AppColors.appThemeColor.withOpacity(0.2),
         currentIndex: currentIndex,
         onTap: (index) {
-          setState(() {
-            currentIndex = index;
-          });
+          changeIndex(index);
         },
         items: const [
           BottomNavigationBarItem(label: 'Home', icon: Icon(Icons.home)),
