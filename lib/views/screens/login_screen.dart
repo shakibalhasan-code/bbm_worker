@@ -2,6 +2,7 @@ import 'package:bbm_worker/stylish/app_colors.dart';
 import 'package:bbm_worker/views/widgets/custom_button.dart';
 import 'package:bbm_worker/views/widgets/custom_textfield.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../getx/login_controller.dart';
@@ -46,6 +47,13 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Obx(() => Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  SizedBox(
+                      height: 100,
+                      width: 100,
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset('assets/images/icon.png',fit: BoxFit.cover,))),
+                  const  SizedBox(height: 20,),
                   const Text(
                     'Welcome Back',
                     style: TextStyle(
@@ -85,15 +93,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               )),
             ),
-            const Positioned(
+             Positioned(
               right: 0,
               left: 0,
               bottom: 20,
-              child: Text(
-                'Emergency Call- 0123456789',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-              ),
+              child: InkWell(
+                onTap: () {
+                  Clipboard.setData(const ClipboardData(text: 'Emergency Call- +880 1323-898823'));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:  Text('Text copied to clipboard!'),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Emergency Call- +880 1323-898823',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              )
             ),
           ],
         ),

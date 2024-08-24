@@ -23,21 +23,36 @@ class _TabScreenState extends State<TabScreen> {
     screens.addAll([
       HomeScreen(
         card1Pressed: () {
-          changeIndex(1); // Change index to the "Reports" screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TotalReport(indexPage: 0,showTool: true,),
+            ),
+          );
         },
         card2Pressed: () {
-          changeIndex(1); // Change index to the "Attendance" screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TotalReport(indexPage: 2,showTool: true),
+            ),
+          );
         },
         card3Pressed: () {
-          changeIndex(1); // Change index to the "Profile" screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TotalReport(indexPage: 1,showTool: true),
+            ),
+          );
         },
         card4Pressed: () {
           changeIndex(1);
         },
       ),
-      TotalReport(),
-      AttendenceScreen(),
-      ProfileScreen(),
+      const TotalReport(indexPage: 0,showTool: false),
+      const AttendenceScreen(),
+      const ProfileScreen(),
     ]);
   }
 
@@ -65,9 +80,8 @@ class _TabScreenState extends State<TabScreen> {
         },
         items: const [
           BottomNavigationBarItem(label: 'Home', icon: Icon(Icons.home)),
-          BottomNavigationBarItem(label: 'Reports', icon: Icon(Icons.report)),
-          BottomNavigationBarItem(
-              label: 'Attendance', icon: Icon(Icons.done_all_rounded)),
+          BottomNavigationBarItem(label: 'Complaints', icon: Icon(Icons.info)),
+          BottomNavigationBarItem(label: 'Attendance', icon: Icon(Icons.done_all_rounded)),
           BottomNavigationBarItem(label: 'Profile', icon: Icon(Icons.person)),
         ],
       ),

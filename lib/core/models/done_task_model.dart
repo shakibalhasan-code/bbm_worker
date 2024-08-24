@@ -9,6 +9,7 @@ class DoneTaskModel {
   String update;
   String type;
   String date;
+  String ticketId;
 
   DoneTaskModel({
     required this.address,
@@ -20,7 +21,8 @@ class DoneTaskModel {
     required this.productName,
     required this.update,
     required this.type,
-    required this.date
+    required this.date,
+    required this.ticketId
   });
 
   factory DoneTaskModel.fromFirestore(Map<String, dynamic> data) {
@@ -34,7 +36,8 @@ class DoneTaskModel {
       productName: data['productName'] ?? '',
       update: data['update'] ?? '',
       type: data['issueCategory'] ?? '',
-      date: data['selectedDate'] ?? ''
+      date: data['selectedDate'] ?? '',
+      ticketId: data['ticketId'] ?? ''
     );
   }
 }

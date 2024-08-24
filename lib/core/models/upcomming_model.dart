@@ -11,6 +11,7 @@ class UpcommingModel {
   final String documentId;
   final String selectedDate;
   final String selectedTime;
+  final String ticketId;
 
 
   UpcommingModel({
@@ -25,7 +26,8 @@ class UpcommingModel {
     required this.type,
     required this.documentId,
     required this.selectedDate,
-    required this.selectedTime
+    required this.selectedTime,
+    required this.ticketId
   });
 
   factory UpcommingModel.fromFirestore(Map<String, dynamic> data, String documentId) {
@@ -41,7 +43,8 @@ class UpcommingModel {
         type: data['issueCategory'] ?? '',
         documentId: documentId,
         selectedDate: data['selectedDate'],
-        selectedTime: data['selectedTime']
+        selectedTime: data['selectedTime'],
+      ticketId: data['ticketId']
     );
   }
 }

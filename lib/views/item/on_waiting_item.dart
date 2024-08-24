@@ -11,15 +11,11 @@ import '../../stylish/app_colors.dart';
 class WaitingWorkItem extends StatefulWidget {
   final WaitingModel waitingModel;
   final String workerEmail;
-  final VoidCallback onTaskStarted;
-  final VoidCallback onTaskEnded;
 
   const WaitingWorkItem({
     Key? key,
     required this.waitingModel,
     required this.workerEmail,
-    required this.onTaskStarted,
-    required this.onTaskEnded,
   }) : super(key: key);
 
   @override
@@ -28,6 +24,8 @@ class WaitingWorkItem extends StatefulWidget {
 
 class _WaitingWorkItemState extends State<WaitingWorkItem> {
   final UserDataController _userDataController = Get.find<UserDataController>();
+  final TextEditingController noteController = TextEditingController();
+  bool isLoading = false;
 
   String _selectedDate = 'Not set';
   String _selectedTime = 'Not set';
@@ -84,9 +82,9 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
       if (value == 'schedule') {
         _selectDate(context).then((_) {
           _selectTime(context).then((_) {
-            if(_selectedDate.isNotEmpty && _selectedTime.isNotEmpty ){
+            if (_selectedDate.isNotEmpty && _selectedTime.isNotEmpty) {
               _storeDataToFirestore();
-            }else{
+            } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Please Select a date '),
@@ -102,12 +100,124 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
           Get.snackbar('Failed to call', 'Sorry, phone number is empty');
         }
       } else if (value == 'unsolved') {
-        _storeDataToUnsolve();
+        _showDoneNoteDialog(context);
       }
     });
   }
 
   Future<void> _storeDataToUnsolve() async {
+    final now = DateTime.now();
+    final formatter = DateFormat('yyyy-MM-dd'); // Format as needed
+    final formattedDate = formatter.format(now);
+
+    final data = {
+      'address': widget.waitingModel.address,
+      'fullName': widget.waitingModel.fullName,
+      'message': widget.waitingModel.message,
+      'phoneNumber': widget.waitingModel.phoneNumber,
+      'productCode': widget.waitingModel.productCode,
+      'productImage': widget.waitingModel.productImage,
+      'productName': widget.waitingModel.productName,
+      'update': widget.waitingModel.update,
+      'issueCategory': widget.waitingModel.type,
+      'unsolvedDate': formattedDate,
+      'workerEmail': widget.workerEmail,
+      'ticketId': widget.waitingModel.ticketNumber,
+      'note': noteController.text,
+      'date':formattedDate
+    };
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('unsolved')
+          .add(data); // Using .add() to automatically generate a document ID
+
+      await deleteDocumentByString('complaints', widget.waitingModel.ticketNumber);
+
+      await _userDataController.removeWaitingTask(
+          widget.workerEmail, widget.waitingModel.documentId);
+    } catch (e) {
+      print('Error storing unsolved data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to store data: $e')),
+      );
+    }
+  }
+
+  Future<void> deleteDocumentByString(String collection, dataString) async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection(collection)
+          .where('id', isEqualTo: dataString)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final docId = querySnapshot.docs.first.id;
+        await FirebaseFirestore.instance
+            .collection('complaints')
+            .doc(docId)
+            .delete();
+
+        print('Document deleted successfully!');
+      } else {
+        print('No matching document found.');
+      }
+    } catch (e) {
+      print('Error deleting document: $e');
+    }
+  }
+
+  Future<void> deleteCusSubCollDocumentByString() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('customers')
+          .doc(widget.waitingModel.phoneNumber)
+          .collection('complaints')
+          .where('id', isEqualTo: widget.waitingModel.ticketNumber)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final docId = querySnapshot.docs.first.id;
+        await FirebaseFirestore.instance
+            .collection('complaints')
+            .doc(docId)
+            .delete();
+
+        print('Document deleted successfully!');
+      } else {
+        print('No matching document found.');
+      }
+    } catch (e) {
+      print('Error deleting document: $e');
+    }
+  }
+
+  Future<void> deleteWorkSubCollDocumentByString() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('workers')
+          .doc(widget.workerEmail)
+          .collection('complaints')
+          .where('id', isEqualTo: widget.waitingModel.ticketNumber)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final docId = querySnapshot.docs.first.id;
+        await FirebaseFirestore.instance
+            .collection('complaints')
+            .doc(docId)
+            .delete();
+
+        print('Document deleted successfully!');
+      } else {
+        print('No matching document found.');
+      }
+    } catch (e) {
+      print('Error deleting document: $e');
+    }
+  }
+
+  Future<void> writeDataToCustomer() async {
     final now = DateTime.now();
     final formatter = DateFormat('yyyy-MM-dd'); // Format as needed
     final formattedDate = formatter.format(now);
@@ -123,23 +233,109 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
       'issueCategory': widget.waitingModel.type,
       'unsolvedDate': formattedDate,
       'workerEmail': widget.workerEmail,
+      'ticketId': widget.waitingModel.ticketNumber,
+      'note': noteController.text
+
     };
 
-    try {
-      await FirebaseFirestore.instance
+    try{
+      FirebaseFirestore.instance
+          .collection('customers')
+          .doc(widget.waitingModel.phoneNumber)
           .collection('unsolved')
-          .doc(_selectedDate)
-          .set(data);
+          .add(data);
+      print('the unsolve data saved into customer unsolved');
+    }catch(e){
+      print('failed the unsolve data saved into customer unsolved $e');
 
-      await _userDataController.removeWaitingTask(
-          widget.workerEmail, widget.waitingModel.documentId);
-    } catch (e) {
-      print('unsolved: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to store data: $e')),
-      );
     }
+  }
+  Future<void> writeDataToWorker() async {
+    final now = DateTime.now();
+    final formatter = DateFormat('yyyy-MM-dd'); // Format as needed
+    final formattedDate = formatter.format(now);
+    final data = {
+      'address': widget.waitingModel.address,
+      'fullName': widget.waitingModel.fullName,
+      'message': widget.waitingModel.message,
+      'phoneNumber': widget.waitingModel.phoneNumber,
+      'productCode': widget.waitingModel.productCode,
+      'productImage': widget.waitingModel.productImage,
+      'productName': widget.waitingModel.productName,
+      'update': widget.waitingModel.update,
+      'issueCategory': widget.waitingModel.type,
+      'unsolvedDate': formattedDate,
+      'workerEmail': widget.workerEmail,
+      'ticketId': widget.waitingModel.ticketNumber,
+      'note': noteController.text
 
+    };
+
+    try{
+      FirebaseFirestore.instance
+          .collection('workers')
+          .doc(widget.workerEmail)
+          .collection('unsolved')
+          .add(data);
+      print('the unsolve data saved into customer unsolved');
+    }catch(e){
+      print('failed the unsolve data saved into customer unsolved $e');
+
+    }
+  }
+
+
+  Future<String?> _showDoneNoteDialog(BuildContext context) async {
+    return await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Unsolved Note'),
+        content: TextField(
+          controller: noteController,
+          decoration: const InputDecoration(
+            hintText: 'note...',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              setState(() {
+                isLoading = true;
+              });
+              final note = noteController.text.trim();
+              if (note.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a note'),
+                  ),
+                );
+                return; // Don't pop if empty
+              } else {
+                setState(() async {
+                  await _storeDataToUnsolve();
+                  await writeDataToWorker();
+                  await writeDataToCustomer();
+                  await deleteCusSubCollDocumentByString();
+                  await deleteWorkSubCollDocumentByString();
+                  Navigator.pop(context);
+                });
+                setState(() {
+                  isLoading = false;
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: isLoading
+                ? const CircularProgressIndicator()
+                : const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _storeDataToFirestore() async {
@@ -155,6 +351,7 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
       'issueCategory': widget.waitingModel.type,
       'selectedDate': _selectedDate,
       'selectedTime': _selectedTime,
+      'ticketId': widget.waitingModel.ticketNumber
     };
 
     try {
@@ -162,15 +359,13 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
           .collection('workers')
           .doc(widget.workerEmail)
           .collection('upComing')
-          .doc(_selectedDate)
-          .set(data);
+          .add(data);
 
       await FirebaseFirestore.instance
           .collection('customers')
           .doc(widget.waitingModel.phoneNumber)
           .collection('workingComplaints')
-          .doc(_selectedDate)
-          .set(data);
+          .add(data);
 
       await FirebaseFirestore.instance
           .collection('customers')
@@ -180,16 +375,34 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
           .update(
               {'selectedDate': _selectedDate, 'selectedTime': _selectedTime});
 
-      await _userDataController.removeWaitingTask(
-          widget.workerEmail, widget.waitingModel.documentId);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Successfully Saved'),
         ),
       );
+      await FirebaseFirestore.instance
+          .collection('workers')
+          .doc(widget.workerEmail)
+          .collection('complaints')
+          .doc(widget.waitingModel.documentId)
+          .delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Task successfully deleted'),
+        ),
+      );
+      setState(() {
+        _userDataController.fetchWaitingOnTaskData(widget.workerEmail);
+      });
     } catch (e) {
       print(e);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    print(widget.waitingModel.documentId);
   }
 
   @override
@@ -204,7 +417,7 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
         child: Column(
           children: [
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.appThemeColor,
                 borderRadius: BorderRadius.only(
                   topRight: Radius.circular(10),
@@ -213,23 +426,28 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
               ),
               width: double.infinity,
               child: Padding(
-                padding: EdgeInsets.all(8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.waitingModel.productName!,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.more_vert,
-                        color: Colors.white,
-                      ),
-                      onPressed: _showPopupMenu,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          widget.waitingModel.productName!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.more_vert,
+                            color: Colors.white,
+                          ),
+                          onPressed: _showPopupMenu,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -244,6 +462,13 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
+                          widget.waitingModel.ticketNumber,
+                          style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18),
+                        ),
+                        Text(
                           widget.waitingModel.fullName!,
                           style: TextStyle(color: Colors.white),
                         ),
@@ -254,6 +479,10 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
                         Text(
                           widget.waitingModel.address!,
                           style: TextStyle(color: Colors.white),
+                        ),
+                        Text(
+                          widget.waitingModel.message!,
+                          style: TextStyle(color: Colors.red),
                         ),
                       ],
                     ),

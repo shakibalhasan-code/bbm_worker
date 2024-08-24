@@ -5,72 +5,79 @@ import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/ta
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_waiting_work.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../getx/user_data_controller.dart';
 
 class TotalReport extends StatefulWidget {
-  const TotalReport({super.key});
+  final int indexPage;
+final bool showTool;
+  const TotalReport({super.key, required this.indexPage, required this.showTool});
 
   @override
   State<TotalReport> createState() => _TotalReportState();
 }
 
-
-class _TotalReportState extends State<TotalReport> {
-
+class _TotalReportState extends State<TotalReport>
+    with SingleTickerProviderStateMixin {
   final UserDataController _userDataController = Get.put(UserDataController());
-  late String userCurrentEmail = '';
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    // fetchUserAuth();
+    _tabController = TabController(
+      length: 4,
+      vsync: this,
+      initialIndex: widget.indexPage,
+    );
   }
-
-  // void fetchUserAuth() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   userCurrentEmail = prefs.getString('email') ?? '';
-  //   if (userCurrentEmail.isNotEmpty) {
-  //     await _userDataController.fetchOnTaskData(userCurrentEmail);
-  //     await _userDataController.fetchTodayOnTaskData(userCurrentEmail);
-  //   }
-  // }
-
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const TabBar(
-            labelColor: AppColors.appThemeColor,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: AppColors.appThemeColor,
-            tabs: [
-              Tab(text: 'Today\'s Work'),
-              Tab(text: 'Waiting'),
-              Tab(text: 'Upcoming'),
-              Tab(text: 'Done'),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                TabTodaysWork(),
-                TabWaitingWork(),
-                TabUpcomingWork(),
-                TabDoneWork()
+    return Scaffold(
+      backgroundColor: AppColors.appThemeColor.withOpacity(0.2),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            widget.showTool ? Row(children: [
+              IconButton(
+                onPressed: () {
+                  Get.back();
+                },
+                icon: const Icon(Icons.arrow_back,color: Colors.white,),
+              ),
+              const SizedBox(
+                width: 10,
+              ),
+              const Text('Complaints',style: TextStyle(color: Colors.white,fontSize: 19,fontWeight: FontWeight.bold),)
+            ]): const SizedBox(),
+            TabBar(
+              controller: _tabController,
+              labelColor: AppColors.appThemeColor,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: AppColors.appThemeColor,
+              tabs: const [
+                Tab(text: 'Today\'s Work'),
+                Tab(text: 'Waiting'),
+                Tab(text: 'Upcoming'),
+                Tab(text: 'Done'),
               ],
             ),
-          ),
-        ],
-      )
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  TabTodaysWork(),
+                  TabWaitingWork(),
+                  TabUpcomingWork(),
+                  TabDoneWork(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
-
-

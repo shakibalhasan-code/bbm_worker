@@ -59,6 +59,10 @@ class UpCommingTask extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
+                          upcommingModel.ticketId,
+                          style: TextStyle(color: Colors.red,fontWeight: FontWeight.bold,fontSize: 18),
+                        ),
+                        Text(
                           upcommingModel.fullName,
                           style: TextStyle(color: Colors.white),
                         ),

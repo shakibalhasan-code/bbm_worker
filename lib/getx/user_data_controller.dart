@@ -20,29 +20,31 @@ class UserDataController extends GetxController {
 
   Future<void> fetchTodayOnTaskData(String userEmail) async {
     final now = DateTime.now();
-    final docId = DateFormat('dd-MM-yyyy').format(now);
+    final todayDate = DateFormat('dd-MM-yyyy').format(now);
 
     try {
-      final DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
+      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('workers')
           .doc(userEmail)
           .collection('upComing')
-          .doc(docId)
+          .where('selectedDate', isEqualTo: todayDate)
           .get();
 
-      if (documentSnapshot.exists) {
-        final data = documentSnapshot.data() as Map<String, dynamic>;
-        final task = OnTaskModel.fromFirestore(data, documentSnapshot.id);
-        onTaskList.value = [task];
-        todayWorkCount.value =
-            1; // Since it's fetching today's work by specific date
-      } else {
-        print('Document not found for $userEmail on $docId');
+      if (querySnapshot.docs.isEmpty) {
+        print('No tasks found for today ($todayDate) for $userEmail');
         onTaskList.value = [];
         todayWorkCount.value = 0;
+      } else {
+        final todayTasks = querySnapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return OnTaskModel.fromFirestore(data, doc.id);
+        }).toList();
+
+        onTaskList.value = todayTasks;
+        todayWorkCount.value = querySnapshot.docs.length;
       }
     } catch (e) {
-      print('Error fetching onTask data: $e');
+      print('Error fetching today\'s tasks: $e');
       rethrow;
     }
   }
@@ -164,6 +166,39 @@ class UserDataController extends GetxController {
     } catch (e) {
       print('Error fetching review data: $e');
       rethrow;
+    }
+  }
+
+  Future<void> findAndUpdateMessage(
+      String phoneNumber, String messageData, Map<String, dynamic> data) async {
+    try {
+      // Step 1: Query the sub-collection to find the document with the matching message
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('customers')
+          .doc(phoneNumber)
+          .collection('workingComplaints')
+          .where('message', isEqualTo: messageData)
+          .get();
+
+      // Step 2: Check if the document exists
+      if (querySnapshot.docs.isNotEmpty) {
+        // Assuming there's only one document that matches the criteria
+        DocumentSnapshot doc = querySnapshot.docs.first;
+
+        // Step 3: Get the document ID and update the document with the new string
+        await FirebaseFirestore.instance
+            .collection('customers')
+            .doc(phoneNumber)
+            .collection('workingComplaints')
+            .doc(doc.id)
+            .update(data);
+
+        print('Document updated successfully.');
+      } else {
+        print('No document found with the specified message.');
+      }
+    } catch (e) {
+      print('Error updating document: $e');
     }
   }
 }

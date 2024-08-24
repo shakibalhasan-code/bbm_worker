@@ -11,6 +11,7 @@ class OnTaskModel {
   final String documentId;
   final String selectedDate;
   final String selectedTime;
+  final String ticketId;
 
 
   OnTaskModel({
@@ -25,7 +26,8 @@ class OnTaskModel {
     required this.type,
     required this.documentId,
     required this.selectedDate,
-    required this.selectedTime
+    required this.selectedTime,
+    required this.ticketId
   });
 
   factory OnTaskModel.fromFirestore(Map<String, dynamic> data, String documentId) {
@@ -41,7 +43,8 @@ class OnTaskModel {
       type: data['issueCategory'] ?? '',
       documentId: documentId,
       selectedDate: data['selectedDate'],
-      selectedTime: data['selectedTime']
+      selectedTime: data['selectedTime'],
+        ticketId : data['ticketId']
     );
   }
 }

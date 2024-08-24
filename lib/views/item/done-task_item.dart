@@ -60,6 +60,10 @@ class DoneTaskItem extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
+                          doneTaskModel.ticketId,
+                          style: TextStyle(color: Colors.green,fontWeight: FontWeight.bold,fontSize: 18),
+                        ),
+                        Text(
                           doneTaskModel.fullName,
                           style: TextStyle(color: Colors.white),
                         ),
@@ -70,6 +74,10 @@ class DoneTaskItem extends StatelessWidget {
                         Text(
                           doneTaskModel.address,
                           style: TextStyle(color: Colors.white),
+                        ),
+                        Text(
+                          doneTaskModel.message,
+                          style: TextStyle(color: Colors.red),
                         ),
                       ],
                     ),

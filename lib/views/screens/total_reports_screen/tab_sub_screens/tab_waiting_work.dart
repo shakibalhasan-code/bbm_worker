@@ -50,10 +50,6 @@ class _TabWaitingWorkState extends State<TabWaitingWork> {
                     itemBuilder: (context, index) {
                       return WaitingWorkItem(
                         waitingModel: WaitingModel[index],
-                        onTaskStarted: () {},
-                        onTaskEnded: () {
-                          _loadUserEmail();
-                        },
                         workerEmail: userCurrentEmail,
                       );
                     },

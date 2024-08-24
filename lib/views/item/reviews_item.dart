@@ -20,27 +20,28 @@ class ReviewsItem extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.appThemeColor,
                 borderRadius: BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10)),
               ),
               width: double.infinity,
               child: Padding(
-                padding: EdgeInsets.all(8),
-                child: Text(reviewModel.endedDate, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                padding: const EdgeInsets.all(8),
+                child: Text(reviewModel.endedDate, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               child: Row(
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Name: ${reviewModel.customerName}', style: TextStyle(color: Colors.white),),
-                        Text('Location: ${reviewModel.address}', style: TextStyle(color: Colors.white),),
-                        Text('Review: ${reviewModel.review}', style: TextStyle(color: Colors.white),),
+                        Text('Name: ${reviewModel.customerName}', style: const TextStyle(color: Colors.white),),
+                        Text('Location: ${reviewModel.address}', style: const TextStyle(color: Colors.white),),
+                        Text('Review: ${reviewModel.review}', style: const TextStyle(color: Colors.white),),
+                        Text('Rated: ${reviewModel.rating}', style: const  TextStyle(color: Colors.white),),
                       ],
                     ),
                   ),

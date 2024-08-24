@@ -1,12 +1,16 @@
 import 'package:bbm_worker/core/models/worker.dart';
 import 'package:bbm_worker/getx/profile_controller.dart';
 import 'package:bbm_worker/stylish/app_colors.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/ontask_model.dart';
+import '../../getx/user_data_controller.dart';
 
 class TodaysWorkItem extends StatefulWidget {
   final OnTaskModel onTaskModel;
@@ -29,6 +33,12 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
   final ProfileController _profileController = ProfileController();
   late String currentEmail;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final TextEditingController noteController = TextEditingController();
+  final TextEditingController customerReviewController =
+      TextEditingController();
+  final UserDataController _userDataController = Get.find<UserDataController>();
+  bool isLoading = false;
+  bool doneIsLoading = false;
 
   // Future<void> _selectDate(BuildContext context) async {
   //   final now = DateTime.now();
@@ -97,7 +107,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
     ).then((value) {
       if (value == 'done') {
         _selectDate(context).then((_) {
-          _storeDataToFirestore();
+          _showDoneNoteDialog(context);
         });
       } else if (value == 'call') {
         // Implement call functionality here
@@ -106,9 +116,9 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       } else if (value == 'changeDate') {
         _selectDate(context).then((_) {
           _selectTime(context).then((_) {
-            if(_selectedDate.isNotEmpty && _selectedTime.isNotEmpty ){
-              _updateSchedule();
-            }else{
+            if (_selectedDate.isNotEmpty && _selectedTime.isNotEmpty) {
+              _showEditNoteDialog(context);
+            } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Please Select a date '),
@@ -121,8 +131,131 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
     });
   }
 
-  Future<void> _updateSchedule() async {
+  Future<String?> _showEditNoteDialog(BuildContext context) async {
+    return await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Change Note'),
+        content: TextField(
+          controller: noteController,
+          decoration: const InputDecoration(
+            hintText: 'Enter note...',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              setState(() {
+                isLoading = true;
+              });
+              final note = noteController.text.trim();
+              if (note.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a note'),
+                  ),
+                );
+                return; // Don't pop if empty
+              } else {
+                final newScheduleData = {
+                  'selectedDate': _selectedDate,
+                  'selectedTime': _selectedTime,
+                  'changedNote': noteController.text,
+                };
+                await _userDataController.findAndUpdateMessage(
+                    widget.onTaskModel.phoneNumber,
+                    widget.onTaskModel.message,
+                    newScheduleData);
+                await _saveDataToWorker();
+                isLoading = false;
+                Navigator.pop(context);
+              }
+            },
+            child: isLoading
+                ? const CircularProgressIndicator()
+                : const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Future<String?> _showDoneNoteDialog(BuildContext context) async {
+    return await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Finished Note'),
+        content: TextField(
+          controller: noteController,
+          decoration: const InputDecoration(
+            hintText: 'note...',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              doneIsLoading = true;
+              final note = noteController.text.trim();
+              if (note.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a note'),
+                  ),
+                );
+                return; // Don't pop if empty
+              } else {
+                setState(() async {
+                  await _storeDataToFirestore();
+                  await _deleteDataFromWorker();
+                });
+                Navigator.pop(context);
+                doneIsLoading = false;
+              }
+            },
+            child: doneIsLoading
+                ? const CircularProgressIndicator()
+                : const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteDataFromWorker() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('workers')
+          .doc(widget.workerEmail)
+          .collection('upComing')
+          .doc(widget.onTaskModel.documentId)
+          .delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Task successfully deleted'),
+        ),
+      );
+      setState(() {
+        _userDataController.fetchUpcomingOnTaskData(widget.workerEmail);
+      });
+    } catch (e) {
+      print('${widget.onTaskModel.documentId} Error deleting task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete task: $e'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveDataToWorker() async {
     final data = {
       'address': widget.onTaskModel.address,
       'fullName': widget.onTaskModel.fullName,
@@ -135,6 +268,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       'issueCategory': widget.onTaskModel.type,
       'selectedDate': _selectedDate,
       'selectedTime': _selectedTime,
+      'ticketId': widget.onTaskModel.ticketId
     };
 
     try {
@@ -142,31 +276,27 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
           .collection('workers')
           .doc(widget.workerEmail)
           .collection('upComing')
-          .doc(_selectedDate)
-          .set(data);
+          .add(data);
 
-      await _firestore.collection('workers')
-          .doc(widget.workerEmail)
-          .collection('upComing')
-          .doc(widget.onTaskModel.documentId)
-          .delete();
+      // await FirebaseFirestore.instance
+      //     .collection('customers')
+      //     .doc(widget.onTaskModel.phoneNumber)
+      //     .collection('complaints')
+      //     .doc(widget.onTaskModel.documentId)
+      //     .update(
+      //     {'selectedDate': _selectedDate, 'selectedTime': _selectedTime});
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Updated Schedule '),
+          content: Text('Successfully Saved'),
         ),
       );
-
-
-    }catch(e){
-      print('error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
-          content: Text('Enable to Updated Schedule  $e'),
-        ),
-      );
+      setState(() {
+        _userDataController.fetchUpcomingOnTaskData(widget.workerEmail);
+      });
+    } catch (e) {
+      print(e);
     }
-
   }
 
   Future<void> _storeDataToFirestore() async {
@@ -179,15 +309,16 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       'customerPhone': widget.onTaskModel.phoneNumber,
       'productImage': widget.onTaskModel.productImage,
       'productCode': widget.onTaskModel.productCode,
-      'address': widget.onTaskModel.address
+      'address': widget.onTaskModel.address,
+      'ticketId': widget.onTaskModel.ticketId
     };
 
-    final now = DateTime
-        .now()
-        .millisecondsSinceEpoch;
+    final today = DateTime.now();
+    final formattedDate =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
     final selectedDateDoc =
-    FirebaseFirestore.instance.collection('reports').doc(_selectedDate);
+        FirebaseFirestore.instance.collection('reports').doc(formattedDate);
 
     // Add reports data
     await selectedDateDoc.collection(widget.workerEmail).add(reportsData);
@@ -208,6 +339,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       'update': widget.onTaskModel.update,
       'type': widget.onTaskModel.type,
       'selectedDate': _selectedDate,
+      'ticketId': widget.onTaskModel.ticketId
     };
 
     final cdata = {
@@ -218,14 +350,15 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       'productCode': widget.onTaskModel.productCode,
       'productImage': widget.onTaskModel.productImage,
       'productName': widget.onTaskModel.productName,
-      'update': widget.onTaskModel.update,
+      'update': 'true',
       'type': widget.onTaskModel.type,
       'endedDate': _selectedDate,
       'workerName': _profileController.user.value.fullName,
       'workerPhone': _profileController.user.value.phone,
       'workerImage': _profileController.user.value.imageUrl,
       'workerRole': _profileController.user.value.role,
-      'workerEmail': _profileController.user.value.email
+      'workerEmail': _profileController.user.value.email,
+      'ticketId': widget.onTaskModel.ticketId
     };
 
     // final now = DateTime.now();
@@ -237,6 +370,8 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
           .doc(widget.workerEmail)
           .collection('doneComplaints')
           .add(data);
+
+      await FirebaseFirestore.instance.collection('complaintsDone').add(cdata);
 
       await FirebaseFirestore.instance
           .collection('customers')
@@ -265,6 +400,8 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
           .doc(widget.onTaskModel.documentId)
           .delete();
 
+      await deleteDocumentsByMessage(widget.onTaskModel.message);
+
       // await FirebaseFirestore.instance
       //     .collection('workers')
       //     .doc(widget.workerEmail)
@@ -273,6 +410,47 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       //     .delete();
     } catch (e) {
       print(e);
+    }
+  }
+
+  Future<void> deleteDocumentsByMessage(String message) async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('complaints')
+          .where('message', isEqualTo: message)
+          .get();
+
+      final batch = FirebaseFirestore.instance.batch();
+
+      for (final doc in querySnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+      print('Documents deleted successfully!');
+    } catch (e) {
+      print('Error deleting documents: $e');
+    }
+  }
+
+  Future<void> markComplaintAsFinished(OnTaskModel onTaskModel) async {
+    try {
+      // Query the Firestore collection 'complaints' to find the document with the matching 'message' field
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('complaints')
+          .where('message', isEqualTo: onTaskModel.message)
+          .get();
+
+      // Loop through the results and update the 'finished' field to true
+      for (var doc in querySnapshot.docs) {
+        await doc.reference.update({'finished': true});
+      }
+
+      // Optional: Display a success message
+      print('Complaint marked as finished.');
+    } catch (e) {
+      // Handle any errors
+      print('Error marking complaint as finished: $e');
     }
   }
 
@@ -302,8 +480,15 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
+                      widget.onTaskModel.ticketId,
+                      style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18),
+                    ),
+                    Text(
                       widget.onTaskModel.productName,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -329,15 +514,19 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                       children: [
                         Text(
                           widget.onTaskModel.fullName,
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                         Text(
                           widget.onTaskModel.phoneNumber,
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                         Text(
                           widget.onTaskModel.address,
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        Text(
+                          widget.onTaskModel.message,
+                          style: const TextStyle(color: Colors.red),
                         ),
                       ],
                     ),
@@ -351,7 +540,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                           style: TextStyle(color: Colors.white),
                         ),
                         Text(
-                          'Date: ${widget.onTaskModel.selectedTime}',
+                          'Time: ${widget.onTaskModel.selectedTime}',
                           style: TextStyle(color: Colors.white),
                         ),
                         Text(

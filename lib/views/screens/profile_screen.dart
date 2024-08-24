@@ -29,21 +29,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _fetchWorkerData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     userCurrentEmail = prefs.getString('email') ?? '';
+
     if (userCurrentEmail.isNotEmpty) {
-      _profileController.fetchUserData(userCurrentEmail);
+      await _profileController.fetchUserData(userCurrentEmail);
+      reviewList = await fetchReviews();
+      setState(() {}); // Update the UI after data fetch
+    } else {
+      // Handle the case where userCurrentEmail is empty
+      print('Error: userCurrentEmail is empty, cannot fetch reviews');
     }
   }
 
+
   Future<List<ReviewModel>> fetchReviews() async {
-    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+    print('Fetching reviews for email: $userCurrentEmail');
+
+    if (userCurrentEmail.isEmpty) {
+      print('Error: userCurrentEmail is empty, cannot fetch reviews');
+      return []; // Return empty list if email is empty
+    }
+
+    print('Fetching reviews for email: $userCurrentEmail');
+
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore
+        .instance
         .collection('workers')
         .doc(userCurrentEmail)
         .collection('reviews')
         .get();
 
-    return querySnapshot.docs
-        .map((doc) => ReviewModel.fromFirestore(doc))
-        .toList();
+    print('Found ${querySnapshot.docs.length} reviews');
+
+    return querySnapshot.docs.map((doc) {
+      print('Review Data: ${doc.data()}');
+      return ReviewModel.fromFirestore(doc);
+    }).toList();
   }
 
   @override
@@ -58,7 +78,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -70,7 +90,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   border: Border.all(width: 1, color: AppColors.appThemeColor),
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(8),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
@@ -86,12 +106,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(15),
                               child: CachedNetworkImage(
-                                imageUrl: _profileController.user.value.imageUrl,
+                                imageUrl:
+                                    _profileController.user.value.imageUrl,
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(
                                   child: CircularProgressIndicator(),
                                 ),
-                                errorWidget: (context, url, error) => Icon(Icons.error),
+
                               ),
                             ),
                           );
@@ -118,21 +139,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       }),
                       const SizedBox(height: 5),
                       Divider(color: Colors.white, thickness: 1, endIndent: 1),
-                      FutureBuilder<List<ReviewModel>>(
-                        future: fetchReviews(),
+                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: FirebaseFirestore.instance
+                            .collection('workers')
+                            .doc(userCurrentEmail)
+                            .collection('reviews')
+                            .snapshots(),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator());
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
                           } else if (snapshot.hasError) {
-                            return Center(child: Text('Something went wrong',style: TextStyle(color: Colors.grey),));
-                          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                            return Center(child: Text('No reviews found',style: TextStyle(color: Colors.grey)));
+                            return const Center(
+                                child: Text(
+                              'Something went wrong',
+                              style: TextStyle(color: Colors.grey),
+                            ));
+                          } else if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
+                            return const Center(
+                                child: Text('No reviews found',
+                                    style: TextStyle(color: Colors.grey)));
                           } else {
-                            final reviews = snapshot.data!;
+                            final reviews = snapshot.data!.docs
+                                .map((doc) => ReviewModel.fromFirestore(doc))
+                                .toList();
                             return ListView.builder(
                               itemCount: reviews.length,
                               shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
+                              physics:const NeverScrollableScrollPhysics(),
                               itemBuilder: (context, index) {
                                 return ReviewsItem(reviewModel: reviews[index]);
                               },

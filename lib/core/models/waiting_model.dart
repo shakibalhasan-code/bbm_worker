@@ -9,6 +9,7 @@ class WaitingModel {
   String? update;
   String? type;
   String documentId;
+    String ticketNumber;
 
   WaitingModel({
     required this.address,
@@ -21,20 +22,22 @@ class WaitingModel {
     required this.update,
     required this.type,
     required this.documentId,
+    required this.ticketNumber
   });
 
   factory WaitingModel.fromFirestore(Map<String, dynamic>? data, String documentId) {
     return WaitingModel(
-      address: data?['address'] ?? '',
-      fullName: data?['fullName'] ?? '',
-      message: data?['message'] ?? '',
-      phoneNumber: data?['phoneNumber'] ?? '',
-      productCode: data?['productCode'] ?? '',
-      productImage: data?['productImage'] ?? '',
-      productName: data?['productName'] ?? '',
-      update: data?['update'] ?? '',
-      type: data?['issueCategory'] ?? '',
+      address: data?['address'] ?? 'Empty',
+      fullName: data?['fullName'] ?? 'Empty',
+      message: data?['message'] ?? 'Empty',
+      phoneNumber: data?['phoneNumber'] ?? 'Empty',
+      productCode: data?['productCode'] ?? 'Empty',
+      productImage: data?['productImage'] ?? 'Empty',
+      productName: data?['productName'] ?? 'Empty',
+      update: data?['update'] ?? 'Empty',
+      type: data?['issueCategory'] ?? 'Empty',
       documentId: documentId,
+      ticketNumber: data?['ticketId'] ??'Empty'
     );
   }
 }
