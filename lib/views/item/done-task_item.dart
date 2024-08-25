@@ -157,33 +157,33 @@ class DoneTaskItem extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 5.0),
-                        Row(
-                          children: [
-                            const Icon(Icons.star_border_outlined, color: Colors.green, size: 16.0),
-                            const SizedBox(width: 5.0),
-                            Text(
-                              doneTaskModel.review,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 14.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 5.0),
-                        Row(
-                          children: [
-                            const Icon(Icons.star_border_outlined, color: Colors.green, size: 16.0),
-                            const SizedBox(width: 5.0),
-                            Text(
-                              doneTaskModel.rating.toString(),
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 14.0,
-                              ),
-                            ),
-                          ],
-                        ),
+                        // Row(
+                        //   children: [
+                        //     const Icon(Icons.star_border_outlined, color: Colors.green, size: 16.0),
+                        //     const SizedBox(width: 5.0),
+                        //     Text(
+                        //       doneTaskModel.review,
+                        //       style: const TextStyle(
+                        //         color: Colors.red,
+                        //         fontSize: 14.0,
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+                        // const SizedBox(height: 5.0),
+                        // Row(
+                        //   children: [
+                        //     const Icon(Icons.star_border_outlined, color: Colors.green, size: 16.0),
+                        //     const SizedBox(width: 5.0),
+                        //     Text(
+                        //       doneTaskModel.rating.toString(),
+                        //       style: const TextStyle(
+                        //         color: Colors.red,
+                        //         fontSize: 14.0,
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
                       ],
                     ),
                   ),

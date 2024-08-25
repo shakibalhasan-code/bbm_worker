@@ -380,12 +380,21 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
           content: Text('Successfully Saved'),
         ),
       );
+
       await FirebaseFirestore.instance
           .collection('workers')
           .doc(widget.workerEmail)
           .collection('complaints')
-          .doc(widget.waitingModel.documentId)
-          .delete();
+          .where('id', isEqualTo: widget.waitingModel.ticketNumber)
+          .get()
+          .then((querySnapshot) {
+        if (querySnapshot.docs.isNotEmpty) {
+          querySnapshot.docs.forEach((doc) {
+            doc.reference.delete();
+          });
+        }
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Task successfully deleted'),

@@ -37,17 +37,20 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return  Center(
-      child: Column(
-        children: [
-          SizedBox(
-            height: 100,
-              width: 100,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                  child: Image.asset('assets/icon.png',fit: BoxFit.cover,))),
-          const  SizedBox(height: 20,),
-          const CircularProgressIndicator()
-        ],
+      child: Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: 100,
+                width: 100,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                    child: Image.asset('assets/images/icon.png',fit: BoxFit.cover,))),
+            const  SizedBox(height: 20,),
+            const CircularProgressIndicator()
+          ],
+        ),
       )
     );
   }

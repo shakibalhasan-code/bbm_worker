@@ -1,12 +1,13 @@
+import 'package:bbm_worker/core/models/done_task_model.dart';
+import 'package:bbm_worker/core/models/reiview_model.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/models/reiview_model.dart';
+import '../../core/models/upcomming_model.dart';
 import '../../stylish/app_colors.dart';
 
-class ReviewsItem extends StatelessWidget {
-  final ReviewModel reviewModel;
-
-  const ReviewsItem({super.key, required this.reviewModel});
+class ReviewItem extends StatelessWidget {
+  final ReviewModel doneTaskModel;
+  const ReviewItem({super.key, required this.doneTaskModel});
 
   @override
   Widget build(BuildContext context) {
@@ -22,32 +23,210 @@ class ReviewsItem extends StatelessWidget {
             Container(
               decoration: const BoxDecoration(
                 color: AppColors.appThemeColor,
-                borderRadius: BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10)),
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(10),
+                  topLeft: Radius.circular(10),
+                ),
               ),
               width: double.infinity,
               child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(reviewModel.endedDate, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        doneTaskModel.productName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    // IconButton(
+                    //   icon: Icon(
+                    //     Icons.more_vert,
+                    //     color: Colors.white,
+                    //   ),
+                    //   onPressed: _showPopupMenu,
+                    // ),
+                  ],
+                ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Name: ${reviewModel.customerName}', style: const TextStyle(color: Colors.white),),
-                        Text('Location: ${reviewModel.address}', style: const TextStyle(color: Colors.white),),
-                        Text('Review: ${reviewModel.review}', style: const TextStyle(color: Colors.white),),
-                        Text('Rated: ${reviewModel.rating}', style: const  TextStyle(color: Colors.white),),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              'Date: ${doneTaskModel.endedDate}',
+                              style: const TextStyle(
+                                color: Colors.white,
+
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.confirmation_num_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              'Ticket ID: ${doneTaskModel.ticketId}',
+                              style: const TextStyle(
+                                color: Colors.white,
+
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.person_outline, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              doneTaskModel.customerName,
+                              style: const TextStyle(
+                                color: Colors.white,
+
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5.0),
+                        // Row(
+                        //   children: [
+                        //     const Icon(Icons.call, color: Colors.green, size: 16.0),
+                        //     const SizedBox(width: 5.0),
+                        //     Text(
+                        //       doneTaskModel.phoneNumber,
+                        //       style: const TextStyle(
+                        //         color: Colors.black87,
+                        //         fontSize: 14.0,
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+                        // const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Expanded(
+                              child: Text(
+                                doneTaskModel.address,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14.0,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.message_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Expanded(
+                              child: Text(
+                                doneTaskModel.message,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 14.0,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5.0),
+                        // Row(
+                        //   children: [
+                        //     const Icon(Icons.star_border_outlined, color: Colors.green, size: 16.0),
+                        //     const SizedBox(width: 5.0),
+                        //     Text(
+                        //       doneTaskModel.review,
+                        //       style: const TextStyle(
+                        //         color: Colors.red,
+                        //         fontSize: 14.0,
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+                        // const SizedBox(height: 5.0),
+                        // Row(
+                        //   children: [
+                        //     const Icon(Icons.star_border_outlined, color: Colors.green, size: 16.0),
+                        //     const SizedBox(width: 5.0),
+                        //     Text(
+                        //       doneTaskModel.rating.toString(),
+                        //       style: const TextStyle(
+                        //         color: Colors.red,
+                        //         fontSize: 14.0,
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              'Date: ${doneTaskModel.endedDate}',
+                              style: const TextStyle(
+                                color: Colors.white,
+
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.category_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              doneTaskModel.type,
+                              style: const TextStyle(
+                                color: Colors.white,
+
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

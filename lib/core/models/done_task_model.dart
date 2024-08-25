@@ -32,7 +32,7 @@ class DoneTaskModel {
   factory DoneTaskModel.fromFirestore(Map<String, dynamic> data) {
     return DoneTaskModel(
       address: data['address'] ?? '',
-      fullName: data['customerName'] ?? '',
+      fullName: data['fullName'] ?? '',
       message: data['message'] ?? '',
       phoneNumber: data['phoneNumber'] ?? '',
       productCode: data['productCode'] ?? '',
@@ -40,7 +40,7 @@ class DoneTaskModel {
       productName: data['productName'] ?? '',
       update: data['update'] ?? '',
       type: data['type'] ?? '',
-      date: data['endedDate'] ?? '',
+      date: data['selectedDate'] ?? '',
       ticketId: data['ticketId'] ?? '',
       rating: data['rating'] ?? 0,
       review: data['review'] ?? ''

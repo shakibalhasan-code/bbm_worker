@@ -35,8 +35,7 @@ class ReviewModel {
     required this.ticketId
   });
 
-  factory ReviewModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    final data = snapshot.data()!;
+  factory ReviewModel.fromFirestore(Map<String, dynamic> data) {
     return ReviewModel(
       productCode: data['productCode'] ?? '',
       productImage: data['productImage'] ?? '',

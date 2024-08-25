@@ -1,6 +1,8 @@
 import 'package:bbm_worker/core/models/reiview_model.dart';
 import 'package:bbm_worker/getx/profile_controller.dart';
 import 'package:bbm_worker/stylish/app_colors.dart';
+import 'package:bbm_worker/views/item/reviews_item.dart';
+import 'package:bbm_worker/views/widgets/custom_card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late String userCurrentEmail = '';
   double averageRating = 0.0;
   int totalReviews = 0;
+  List<ReviewModel> reviewModel = [];
 
   @override
   void initState() {
@@ -33,9 +36,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (userCurrentEmail.isNotEmpty) {
       await _profileController.fetchUserData(userCurrentEmail);
       await fetchReviews();
+      await fetchAllReviews();
       setState(() {}); // Update the UI after data fetch
     } else {
       print('Error: userCurrentEmail is empty, cannot fetch reviews');
+    }
+
+
+  }
+
+  Future<void>fetchAllReviews()async{
+    if (userCurrentEmail.isNotEmpty) {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('workers')
+          .doc(userCurrentEmail)
+          .collection('doneComplaints')
+          .get();
+
+      setState(() {
+        reviewModel = querySnapshot.docs
+            .map((doc) =>
+            ReviewModel.fromFirestore(doc.data() as Map<String, dynamic>))
+            .toList();
+        print(reviewModel);
+      });
     }
   }
 
@@ -141,20 +165,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       }),
                       const SizedBox(height: 5),
                       // Review section
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
-                          const SizedBox(width: 5),
-                          Text(
-                            averageRating.toStringAsFixed(1),
-                            style: const TextStyle(fontSize: 18, color: Colors.white),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            '($totalReviews)',
-                            style: const TextStyle(fontSize: 15, color: Colors.white),
-                          ),
-                        ],
+                      Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.star, color: Colors.yellow, size: 20),
+                            const SizedBox(width: 5),
+                            Text(
+                              averageRating.toStringAsFixed(1),
+                              style: const TextStyle(fontSize: 18, color: Colors.white),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              '($totalReviews)',
+                              style: const TextStyle(fontSize: 15, color: Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -162,6 +189,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 20),
               // You can add a section here to display individual reviews if needed
+              // Flexible(
+              //   child: ListView.builder(
+              //     itemCount: reviewModel.length,
+              //     itemBuilder: (context, index) {
+              //       return ReviewItem(doneTaskModel: reviewModel[index]);
+              //     },
+              //   ),
+              // ),
+
             ],
           ),
         ),
