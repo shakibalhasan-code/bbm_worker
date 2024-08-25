@@ -24,6 +24,7 @@ class _AttendenceScreenState extends State<AttendenceScreen> {
   late String userEmail = '';
   UserModel? userModel;
   List<AttendanceRecord> attendanceRecords = [];
+  DateTime selectedDate = DateTime.now();
 
   @override
   void initState() {
@@ -63,18 +64,35 @@ class _AttendenceScreenState extends State<AttendenceScreen> {
   }
 
   void fetchAttendanceRecords() async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+    String selectedDateString = DateFormat('yyyy-MM-dd').format(selectedDate);
+    DocumentSnapshot attendanceDoc = await FirebaseFirestore.instance
         .collection('workers')
         .doc(userEmail)
         .collection('attendance')
+        .doc(selectedDateString)
         .get();
 
     setState(() {
-      attendanceRecords = querySnapshot.docs
-          .map((doc) => AttendanceRecord.fromFirestore(
-              doc.data() as Map<String, dynamic>))
-          .toList();
+      attendanceRecords = attendanceDoc.exists
+          ? [AttendanceRecord.fromFirestore(attendanceDoc.data() as Map<String, dynamic>)]
+          : [];
     });
+  }
+
+  Future<void> pickDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2101),
+    );
+
+    if (pickedDate != null && pickedDate != selectedDate) {
+      setState(() {
+        selectedDate = pickedDate;
+      });
+      fetchAttendanceRecords();
+    }
   }
 
   Future<void> markAttendance() async {
@@ -88,7 +106,7 @@ class _AttendenceScreenState extends State<AttendenceScreen> {
 
       // Convert coordinates to address
       List<Placemark> placemarks =
-          await placemarkFromCoordinates(position.latitude, position.longitude);
+      await placemarkFromCoordinates(position.latitude, position.longitude);
       Placemark place = placemarks[0];
       String location =
           '${place.street}, ${place.locality}, ${place.subLocality}, ${place.postalCode}';
@@ -127,10 +145,10 @@ class _AttendenceScreenState extends State<AttendenceScreen> {
         isAttended = true;
       });
 
-      Get.snackbar('Success',backgroundColor: AppColors.appThemeColor,colorText: Colors.white, 'You\'re attended from now');
+      Get.snackbar('Success', backgroundColor: AppColors.appThemeColor, colorText: Colors.white, 'You\'re attended from now');
       fetchAttendanceRecords(); // Refresh the attendance records after marking attendance
     } else {
-      Get.snackbar('Permission Denied',backgroundColor: Colors.red,colorText: Colors.white,
+      Get.snackbar('Permission Denied', backgroundColor: Colors.red, colorText: Colors.white,
           'Location permission is required to mark attendance');
     }
   }
@@ -142,86 +160,97 @@ class _AttendenceScreenState extends State<AttendenceScreen> {
       child: Column(
         children: [
           const SizedBox(height: 10),
+          // Add a date picker button
+
           userModel != null
               ? Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: AppColors.appThemeColor.withOpacity(0.3),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            SizedBox(
-                              height: 100,
-                              width: 100,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: CachedNetworkImage(
-                                  imageUrl: userModel!.imageUrl,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => Center(
-                                      child: CircularProgressIndicator()),
-                                  errorWidget: (context, url, error) =>
-                                      Icon(Icons.error),
-                                ),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: AppColors.appThemeColor.withOpacity(0.3),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        height: 100,
+                        width: 100,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: CachedNetworkImage(
+                            imageUrl: userModel!.imageUrl,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) =>
+                                Icon(Icons.error),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(userModel!.fullName,
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500)),
+                          Text(userModel!.role,
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.white)),
+                          Text(userModel!.email,
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.white)),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onLongPress: () {
+                              markAttendance();
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: isAttended
+                                    ? Colors.green
+                                    : Colors.red,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                child: Text(
+                                    isAttended
+                                        ? 'Presented'
+                                        : 'Absent - Long Press Now',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white)),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(userModel!.fullName,
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500)),
-                                Text(userModel!.role,
-                                    style: TextStyle(
-                                        fontSize: 14, color: Colors.white)),
-                                Text(userModel!.email,
-                                    style: TextStyle(
-                                        fontSize: 14, color: Colors.white)),
-                                const SizedBox(height: 8),
-                                GestureDetector(
-                                  onLongPress: () {
-                                    markAttendance();
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: isAttended
-                                          ? Colors.green
-                                          : Colors.red,
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 3),
-                                      child: Text(
-                                          isAttended
-                                              ? 'Presented'
-                                              : 'Absent - Long Press Now',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.white)),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                )
+                ],
+              ),
+            ),
+          )
               : Center(child: CircularProgressIndicator()),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.topRight,
+            child: TextButton.icon(
+              icon: Icon(Icons.calendar_today),
+              label: Text(DateFormat('yyyy-MM-dd').format(selectedDate)),
+              onPressed: () => pickDate(context),
+            ),
+          ),
           const SizedBox(height: 10),
           Expanded(
             child: ListView.builder(

@@ -1,5 +1,6 @@
 import 'package:bbm_worker/stylish/app_colors.dart';
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_done_work.dart';
+import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_unsolved_work.dart';
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_upcoming_work.dart';
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_todays_work.dart';
 import 'package:bbm_worker/views/screens/total_reports_screen/tab_sub_screens/tab_waiting_work.dart';
@@ -26,7 +27,7 @@ class _TotalReportState extends State<TotalReport>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 4,
+      length: 5,
       vsync: this,
       initialIndex: widget.indexPage,
     );
@@ -62,6 +63,7 @@ class _TotalReportState extends State<TotalReport>
                 Tab(text: 'Waiting'),
                 Tab(text: 'Upcoming'),
                 Tab(text: 'Done'),
+                Tab(text: 'Unsolved'),
               ],
             ),
             Expanded(
@@ -72,6 +74,7 @@ class _TotalReportState extends State<TotalReport>
                   TabWaitingWork(),
                   TabUpcomingWork(),
                   TabDoneWork(),
+                  TabUnsolvedWork()
                 ],
               ),
             ),

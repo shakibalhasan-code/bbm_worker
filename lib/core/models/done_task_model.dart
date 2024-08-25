@@ -10,6 +10,8 @@ class DoneTaskModel {
   String type;
   String date;
   String ticketId;
+  var rating;
+  String review;
 
   DoneTaskModel({
     required this.address,
@@ -22,22 +24,26 @@ class DoneTaskModel {
     required this.update,
     required this.type,
     required this.date,
-    required this.ticketId
+    required this.ticketId,
+    required this.rating,
+    required this.review
   });
 
   factory DoneTaskModel.fromFirestore(Map<String, dynamic> data) {
     return DoneTaskModel(
       address: data['address'] ?? '',
-      fullName: data['fullName'] ?? '',
+      fullName: data['customerName'] ?? '',
       message: data['message'] ?? '',
       phoneNumber: data['phoneNumber'] ?? '',
       productCode: data['productCode'] ?? '',
       productImage: data['productImage'] ?? '',
       productName: data['productName'] ?? '',
       update: data['update'] ?? '',
-      type: data['issueCategory'] ?? '',
-      date: data['selectedDate'] ?? '',
-      ticketId: data['ticketId'] ?? ''
+      type: data['type'] ?? '',
+      date: data['endedDate'] ?? '',
+      ticketId: data['ticketId'] ?? '',
+      rating: data['rating'] ?? 0,
+      review: data['review'] ?? ''
     );
   }
 }

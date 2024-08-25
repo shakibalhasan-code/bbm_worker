@@ -6,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../item/reviews_item.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,7 +17,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final ProfileController _profileController = ProfileController();
   late String userCurrentEmail = '';
-  List<ReviewModel> reviewList = [];
+  double averageRating = 0.0;
+  int totalReviews = 0;
 
   @override
   void initState() {
@@ -32,24 +32,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (userCurrentEmail.isNotEmpty) {
       await _profileController.fetchUserData(userCurrentEmail);
-      reviewList = await fetchReviews();
+      await fetchReviews();
       setState(() {}); // Update the UI after data fetch
     } else {
-      // Handle the case where userCurrentEmail is empty
       print('Error: userCurrentEmail is empty, cannot fetch reviews');
     }
   }
 
-
-  Future<List<ReviewModel>> fetchReviews() async {
+  Future<void> fetchReviews() async {
     print('Fetching reviews for email: $userCurrentEmail');
 
     if (userCurrentEmail.isEmpty) {
       print('Error: userCurrentEmail is empty, cannot fetch reviews');
-      return []; // Return empty list if email is empty
+      return;
     }
-
-    print('Fetching reviews for email: $userCurrentEmail');
 
     QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore
         .instance
@@ -58,18 +54,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
         .collection('reviews')
         .get();
 
-    print('Found ${querySnapshot.docs.length} reviews');
+    totalReviews = querySnapshot.docs.length;
 
-    return querySnapshot.docs.map((doc) {
-      print('Review Data: ${doc.data()}');
-      return ReviewModel.fromFirestore(doc);
-    }).toList();
+    double sum = 0.0;
+    for (var doc in querySnapshot.docs) {
+      double rating = (doc.data()['rating'] ?? 0).toDouble();
+      sum += rating;
+    }
+
+    if (totalReviews > 0) {
+      averageRating = sum / totalReviews;
+    } else {
+      averageRating = 0.0;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent, // Assuming dark theme
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('My Profile'),
         backgroundColor: AppColors.appThemeColor.withOpacity(0.4),
@@ -107,12 +110,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               borderRadius: BorderRadius.circular(15),
                               child: CachedNetworkImage(
                                 imageUrl:
-                                    _profileController.user.value.imageUrl,
+                                _profileController.user.value.imageUrl,
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(
                                   child: CircularProgressIndicator(),
                                 ),
-
                               ),
                             ),
                           );
@@ -122,63 +124,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Obx(() {
                         return Text(
                           _profileController.user.value.fullName,
-                          style: TextStyle(fontSize: 20, color: Colors.white),
+                          style: const TextStyle(fontSize: 20, color: Colors.white),
                         );
                       }),
                       Obx(() {
                         return Text(
                           _profileController.user.value.role,
-                          style: TextStyle(fontSize: 15, color: Colors.white),
+                          style: const TextStyle(fontSize: 15, color: Colors.white),
                         );
                       }),
                       Obx(() {
                         return Text(
                           _profileController.user.value.email,
-                          style: TextStyle(fontSize: 15, color: Colors.white),
+                          style: const TextStyle(fontSize: 15, color: Colors.white),
                         );
                       }),
                       const SizedBox(height: 5),
-                      Divider(color: Colors.white, thickness: 1, endIndent: 1),
-                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                        stream: FirebaseFirestore.instance
-                            .collection('workers')
-                            .doc(userCurrentEmail)
-                            .collection('reviews')
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
-                          } else if (snapshot.hasError) {
-                            return const Center(
-                                child: Text(
-                              'Something went wrong',
-                              style: TextStyle(color: Colors.grey),
-                            ));
-                          } else if (!snapshot.hasData ||
-                              snapshot.data!.docs.isEmpty) {
-                            return const Center(
-                                child: Text('No reviews found',
-                                    style: TextStyle(color: Colors.grey)));
-                          } else {
-                            final reviews = snapshot.data!.docs
-                                .map((doc) => ReviewModel.fromFirestore(doc))
-                                .toList();
-                            return ListView.builder(
-                              itemCount: reviews.length,
-                              shrinkWrap: true,
-                              physics:const NeverScrollableScrollPhysics(),
-                              itemBuilder: (context, index) {
-                                return ReviewsItem(reviewModel: reviews[index]);
-                              },
-                            );
-                          }
-                        },
+                      // Review section
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const SizedBox(width: 5),
+                          Text(
+                            averageRating.toStringAsFixed(1),
+                            style: const TextStyle(fontSize: 18, color: Colors.white),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            '($totalReviews)',
+                            style: const TextStyle(fontSize: 15, color: Colors.white),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(height: 20),
+              // You can add a section here to display individual reviews if needed
             ],
           ),
         ),

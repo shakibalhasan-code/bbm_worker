@@ -15,6 +15,7 @@ class ReviewModel {
   final String workerPhone;
   final String review;
   final String rating;
+  final String ticketId;
 
   ReviewModel({
     required this.productCode,
@@ -30,7 +31,8 @@ class ReviewModel {
     required this.workerImage,
     required this.workerPhone,
     required this.review,
-    required this.rating
+    required this.rating,
+    required this.ticketId
   });
 
   factory ReviewModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
@@ -49,7 +51,8 @@ class ReviewModel {
       workerImage: data['workerImage'] ?? '',
       workerPhone: data['workerPhone'] ?? '',
       review: data['review'] ?? '',
-        rating:data['rating'] ?? ''
+        rating:data['rating'] ?? '',
+        ticketId: data['ticketId'] ?? ''
     );
   }
 }

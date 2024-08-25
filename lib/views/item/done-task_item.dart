@@ -29,15 +29,19 @@ class DoneTaskItem extends StatelessWidget {
               ),
               width: double.infinity,
               child: Padding(
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      doneTaskModel.productName,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Text(
+                        doneTaskModel.productName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     // IconButton(
@@ -52,32 +56,133 @@ class DoneTaskItem extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          doneTaskModel.ticketId,
-                          style: TextStyle(color: Colors.green,fontWeight: FontWeight.bold,fontSize: 18),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              'Date: ${doneTaskModel.date}',
+                              style: const TextStyle(
+                                color: Colors.white,
+
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          doneTaskModel.fullName,
-                          style: TextStyle(color: Colors.white),
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.confirmation_num_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              'Ticket ID: ${doneTaskModel.ticketId}',
+                              style: const TextStyle(
+                                color: Colors.white,
+
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          doneTaskModel.phoneNumber,
-                          style: TextStyle(color: Colors.white),
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.person_outline, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              doneTaskModel.fullName,
+                              style: const TextStyle(
+                                color: Colors.white,
+
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          doneTaskModel.address,
-                          style: TextStyle(color: Colors.white),
+                        const SizedBox(height: 5.0),
+                        // Row(
+                        //   children: [
+                        //     const Icon(Icons.call, color: Colors.green, size: 16.0),
+                        //     const SizedBox(width: 5.0),
+                        //     Text(
+                        //       doneTaskModel.phoneNumber,
+                        //       style: const TextStyle(
+                        //         color: Colors.black87,
+                        //         fontSize: 14.0,
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+                        // const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Expanded(
+                              child: Text(
+                                doneTaskModel.address,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14.0,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          doneTaskModel.message,
-                          style: TextStyle(color: Colors.red),
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.message_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Expanded(
+                              child: Text(
+                                doneTaskModel.message,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 14.0,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.star_border_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              doneTaskModel.review,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.star_border_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              doneTaskModel.rating.toString(),
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -86,13 +191,34 @@ class DoneTaskItem extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          'Date: ${doneTaskModel.date}',
-                          style: TextStyle(color: Colors.white),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              'Date: ${doneTaskModel.date}',
+                              style: const TextStyle(
+                                color: Colors.white,
+
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          doneTaskModel.type,
-                          style: TextStyle(color: Colors.white),
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            const Icon(Icons.category_outlined, color: Colors.green, size: 16.0),
+                            const SizedBox(width: 5.0),
+                            Text(
+                              doneTaskModel.type,
+                              style: const TextStyle(
+                                color: Colors.white,
+
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
