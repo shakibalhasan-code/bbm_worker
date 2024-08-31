@@ -47,7 +47,7 @@ class _TabScreenState extends State<TabScreen> {
           );
         },
         card4Pressed: () {
-          changeIndex(1);
+          changeIndex(3);
         },
       ),
       const TotalReport(indexPage: 0,showTool: false),

@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: Obx(() {
                     return CustomCard(
-                      icon: Icons.calendar_month_rounded,
+                      icon: Icons.star,
                       text: 'Total Review',
                       number: _userDataController.reviewCount.value,
                       onTap: widget.card4Pressed,

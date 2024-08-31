@@ -154,7 +154,7 @@ class UserDataController extends GetxController {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('workers')
           .doc(userEmail)
-          .collection('review')
+          .collection('reviews')
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
@@ -185,15 +185,27 @@ class UserDataController extends GetxController {
         // Assuming there's only one document that matches the criteria
         DocumentSnapshot doc = querySnapshot.docs.first;
 
-        // Step 3: Get the document ID and update the document with the new string
+        // Step 3: Get the document ID
+        String docId = doc.id;
+
+        // Step 4: Get the current 'scheduleTime' value (default to 0 if not present)
+        int scheduleTime = doc.get('scheduleTime') ?? 0;
+
+        // Step 5: Increment the 'scheduleTime' value
+        scheduleTime++;
+
+        // Step 6: Add the incremented 'scheduleTime' value to the data map
+        data['scheduleTime'] = scheduleTime;
+
+        // Step 7: Update the document with the new data
         await FirebaseFirestore.instance
             .collection('customers')
             .doc(phoneNumber)
             .collection('workingComplaints')
-            .doc(doc.id)
+            .doc(docId)
             .update(data);
 
-        print('Document updated successfully.');
+        print('Document updated successfully. Update count: $scheduleTime');
       } else {
         print('No document found with the specified message.');
       }
@@ -201,4 +213,5 @@ class UserDataController extends GetxController {
       print('Error updating document: $e');
     }
   }
+
 }

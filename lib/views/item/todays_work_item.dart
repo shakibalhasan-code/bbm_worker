@@ -69,7 +69,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
     );
     if (picked != null) {
       setState(() {
-        _selectedDate = DateFormat('yyyy-MM-dd').format(picked);
+        _selectedDate = DateFormat('dd-MM-yyyy').format(picked);
       });
     }
   }
@@ -152,6 +152,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
               setState(() {
                 isLoading = true;
               });
+
               final note = noteController.text.trim();
               if (note.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -159,19 +160,20 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                     content: Text('Please enter a note'),
                   ),
                 );
+                setState(() {
+                  isLoading = false;
+                });
                 return; // Don't pop if empty
               } else {
-                final newScheduleData = {
-                  'selectedDate': _selectedDate,
-                  'selectedTime': _selectedTime,
-                  'changedNote': noteController.text,
-                };
-                await _userDataController.findAndUpdateMessage(
-                    widget.onTaskModel.phoneNumber,
-                    widget.onTaskModel.message,
-                    newScheduleData);
-                await _saveDataToWorker();
-                isLoading = false;
+                print('Selected new Date $_selectedDate & $_selectedTime');
+                Get.snackbar('Selected date', '$_selectedDate & $_selectedTime');
+                await updateDataCustomer(note);
+                await updateDataWorker(note);
+                await updateDataIntoMain(note);
+                setState(() {
+                  isLoading = false;
+                  _userDataController.fetchTodayOnTaskData(currentEmail);
+                });
                 Navigator.pop(context);
               }
             },
@@ -179,10 +181,156 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                 ? const CircularProgressIndicator()
                 : const Text('OK'),
           ),
+
         ],
       ),
     );
+
   }
+
+  Future<void>updateDataCustomer(String note)async{
+    try {
+      // Step 1: Query the sub-collection to find the document with the matching message
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('customers')
+          .doc(widget.onTaskModel.phoneNumber)
+          .collection('workingComplaints')
+          .where('message', isEqualTo: widget.onTaskModel.message)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Step 2: Get the first document
+        DocumentSnapshot doc = querySnapshot.docs.first;
+
+        // // Step 4: Increment the 'scheduleTime' if you are tracking updates
+        // int scheduleTime = doc.get('scheduleTime') ?? 0;
+        // scheduleTime++;
+
+        // Step 3: Prepare data to update
+        final dataToUpdate = {
+          'note': note,  // Your note data
+          'selectedDate':_selectedDate,
+          'selectedTime' : _selectedTime,
+          // Add other fields to update here
+        };
+
+        print(doc.id);
+
+        // Step 5: Update the document
+        await FirebaseFirestore.instance
+            .collection('customers')
+            .doc(widget.onTaskModel.phoneNumber)
+            .collection('workingComplaints')
+            .doc(doc.id)
+            .update(dataToUpdate);
+
+        print('Document updated successfully.');
+        Get.snackbar('Success', 'Document updated successfully.');
+      } else {
+        print('No document found with the specified message.');
+        Get.snackbar('Error', 'No document found with the specified message.');
+      }
+    } catch (e) {
+      print('Error updating document: $e');
+      Get.snackbar('Error', 'Failed to update document: $e');
+    }
+  }
+
+  Future<void>updateDataWorker(String note)async{
+    if(currentEmail.isNotEmpty){
+      try {
+        // Step 1: Query the sub-collection to find the document with the matching message
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            .collection('workers')
+            .doc(currentEmail)
+            .collection('upComing')
+            .where('message', isEqualTo: widget.onTaskModel.message)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          // Step 2: Get the first document
+          DocumentSnapshot doc = querySnapshot.docs.first;
+
+          // // Step 4: Increment the 'scheduleTime' if you are tracking updates
+          // int scheduleTime = doc.get('scheduleTime') ?? 0;
+          // scheduleTime++;
+
+          // Step 3: Prepare data to update
+          final dataToUpdate = {
+            'note': note,  // Your note data
+            'selectedDate':_selectedDate,
+            'selectedTime' : _selectedTime,
+            // Add other fields to update here
+          };
+
+          print(doc.id);
+
+          // Step 5: Update the document
+          await FirebaseFirestore.instance
+              .collection('workers')
+              .doc(currentEmail)
+              .collection('upComing')
+              .doc(doc.id)
+              .update(dataToUpdate);
+
+          print('Document updated successfully.');
+        } else {
+          print('No document found with the specified message.');
+        }
+      } catch (e) {
+        print('Error updating document: $e');
+      }
+    }else{
+      print('no email found!');
+    }
+  }
+
+  Future<void> updateDataIntoMain(String note) async {
+    try {
+      // Step 1: Query the collection to find the document with the matching message
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('complaints')
+          .where('message', isEqualTo: widget.onTaskModel.message)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Step 2: Get the first document
+        DocumentSnapshot doc = querySnapshot.docs.first;
+
+        // Step 3: Fetch the document data and cast it to Map<String, dynamic>
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+        // Step 4: Check if the 'scheduleTime' field exists, if not default to 0
+        int scheduleTime = data.containsKey('scheduleTime') ? data['scheduleTime'] as int : 0;
+
+        // Step 5: Increment the 'scheduleTime' field
+        scheduleTime++;
+
+        // Step 6: Prepare data to update
+        final dataToUpdate = {
+          'note': note,  // Your note data
+          's-selectedDate': _selectedDate,
+          's-selectedTime': _selectedTime,
+          'scheduleTime': scheduleTime,  // Update the scheduleTime
+        };
+
+        print(doc.id);
+
+        // Step 7: Update the document
+        await FirebaseFirestore.instance
+            .collection('complaints')
+            .doc(doc.id)
+            .update(dataToUpdate);
+
+        print('Document updated successfully.');
+      } else {
+        print('No document found with the specified message.');
+      }
+    } catch (e) {
+      print('Error updating document: $e');
+    }
+  }
+
 
   Future<String?> _showDoneNoteDialog(BuildContext context) async {
     return await showDialog<String>(
@@ -202,7 +350,9 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
           ),
           TextButton(
             onPressed: () async {
-              doneIsLoading = true;
+              setState(() {
+                doneIsLoading = true;
+              });
               final note = noteController.text.trim();
               if (note.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -215,9 +365,13 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                 setState(() async {
                   await _storeDataToFirestore();
                   await _deleteDataFromWorker();
+                  await _deleteDataFromCustomer(widget.onTaskModel.ticketId);
+                  await _deleteDataFromComplaints(widget.onTaskModel.ticketId);
+                  doneIsLoading=false;
+                  Navigator.pop(context);
                 });
-                Navigator.pop(context);
-                doneIsLoading = false;
+
+
               }
             },
             child: doneIsLoading
@@ -227,6 +381,34 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
         ],
       ),
     );
+  }
+
+  Future<void> _deleteDataFromComplaints(String id) async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('complaints')
+          .where('id', isEqualTo: id)
+          .get();
+      // If documents exist, delete them
+      if (querySnapshot.docs.isNotEmpty) {
+        for (DocumentSnapshot documentSnapshot in querySnapshot.docs) {
+          await documentSnapshot.reference.delete();
+          print('Document deleted successfully: ${documentSnapshot.id}');
+        }
+      } else {
+        print('No documents found with message: $id');
+      }
+      setState(() {
+        _userDataController.fetchUpcomingOnTaskData(widget.workerEmail);
+      });
+    } catch (e) {
+      print('${widget.onTaskModel.documentId} Error deleting task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete task: $e'),
+        ),
+      );
+    }
   }
 
   Future<void> _deleteDataFromWorker() async {
@@ -255,49 +437,84 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
     }
   }
 
-  Future<void> _saveDataToWorker() async {
-    final data = {
-      'address': widget.onTaskModel.address,
-      'fullName': widget.onTaskModel.fullName,
-      'message': widget.onTaskModel.message,
-      'phoneNumber': widget.onTaskModel.phoneNumber,
-      'productCode': widget.onTaskModel.productCode,
-      'productImage': widget.onTaskModel.productImage,
-      'productName': widget.onTaskModel.productName,
-      'update': widget.onTaskModel.update,
-      'issueCategory': widget.onTaskModel.type,
-      'selectedDate': _selectedDate,
-      'selectedTime': _selectedTime,
-      'ticketId': widget.onTaskModel.ticketId
-    };
-
+  Future<void> _deleteDataFromCustomer(String id) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('workers')
-          .doc(widget.workerEmail)
-          .collection('upComing')
-          .add(data);
-
-      // await FirebaseFirestore.instance
-      //     .collection('customers')
-      //     .doc(widget.onTaskModel.phoneNumber)
-      //     .collection('complaints')
-      //     .doc(widget.onTaskModel.documentId)
-      //     .update(
-      //     {'selectedDate': _selectedDate, 'selectedTime': _selectedTime});
-
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('customer')
+          .doc(widget.onTaskModel.phoneNumber)
+          .collection('workingComplaints')
+          .where('id', isEqualTo: id)
+      .get();
+      // If documents exist, delete them
+      if (querySnapshot.docs.isNotEmpty) {
+        for (DocumentSnapshot documentSnapshot in querySnapshot.docs) {
+          await documentSnapshot.reference.delete();
+          print('Document deleted successfully: ${documentSnapshot.id}');
+        }
+      } else {
+        print('No documents found with message: $id');
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Successfully Saved'),
+          content: Text('Task successfully deleted'),
         ),
       );
       setState(() {
         _userDataController.fetchUpcomingOnTaskData(widget.workerEmail);
       });
     } catch (e) {
-      print(e);
+      print('${widget.onTaskModel.documentId} Error deleting task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete task: $e'),
+        ),
+      );
     }
   }
+
+  // Future<void> _saveDataToWorker() async {
+  //   final data = {
+  //     'address': widget.onTaskModel.address,
+  //     'fullName': widget.onTaskModel.fullName,
+  //     'message': widget.onTaskModel.message,
+  //     'phoneNumber': widget.onTaskModel.phoneNumber,
+  //     'productCode': widget.onTaskModel.productCode,
+  //     'productImage': widget.onTaskModel.productImage,
+  //     'productName': widget.onTaskModel.productName,
+  //     'update': widget.onTaskModel.update,
+  //     'issueCategory': widget.onTaskModel.type,
+  //     'selectedDate': _selectedDate,
+  //     'selectedTime': _selectedTime,
+  //     'ticketId': widget.onTaskModel.ticketId
+  //   };
+  //
+  //   try {
+  //     await FirebaseFirestore.instance
+  //         .collection('workers')
+  //         .doc(widget.workerEmail)
+  //         .collection('upComing')
+  //         .add(data);
+  //
+  //     // await FirebaseFirestore.instance
+  //     //     .collection('customers')
+  //     //     .doc(widget.onTaskModel.phoneNumber)
+  //     //     .collection('complaints')
+  //     //     .doc(widget.onTaskModel.documentId)
+  //     //     .update(
+  //     //     {'selectedDate': _selectedDate, 'selectedTime': _selectedTime});
+  //
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Successfully Saved'),
+  //       ),
+  //     );
+  //     setState(() {
+  //       _userDataController.fetchUpcomingOnTaskData(widget.workerEmail);
+  //     });
+  //   } catch (e) {
+  //     print(e);
+  //   }
+  // }
 
   Future<void> _storeDataToFirestore() async {
     final reportsData = {
@@ -358,7 +575,8 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       'workerImage': _profileController.user.value.imageUrl,
       'workerRole': _profileController.user.value.role,
       'workerEmail': _profileController.user.value.email,
-      'ticketId': widget.onTaskModel.ticketId
+      'ticketId': widget.onTaskModel.ticketId,
+      'note': noteController.text
     };
 
     // final now = DateTime.now();
@@ -479,18 +697,14 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      widget.onTaskModel.ticketId,
-                      style: const TextStyle(
-                          color: Colors.red,
+
+                    Expanded(
+                      child: Text(
+                        widget.onTaskModel.productName,
+                        style: const TextStyle(
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 18),
-                    ),
-                    Text(
-                      widget.onTaskModel.productName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     IconButton(
@@ -512,6 +726,13 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          widget.onTaskModel.ticketId,
+                          style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18),
+                        ),
                         Text(
                           widget.onTaskModel.fullName,
                           style: const TextStyle(color: Colors.white),

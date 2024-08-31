@@ -2,9 +2,12 @@ import 'package:bbm_worker/core/models/reiview_model.dart';
 import 'package:bbm_worker/getx/profile_controller.dart';
 import 'package:bbm_worker/stylish/app_colors.dart';
 import 'package:bbm_worker/views/item/reviews_item.dart';
+import 'package:bbm_worker/views/screens/login_screen.dart';
+import 'package:bbm_worker/views/widgets/custom_button.dart';
 import 'package:bbm_worker/views/widgets/custom_card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -41,11 +44,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else {
       print('Error: userCurrentEmail is empty, cannot fetch reviews');
     }
-
-
   }
 
-  Future<void>fetchAllReviews()async{
+  Future<void> fetchAllReviews() async {
     if (userCurrentEmail.isNotEmpty) {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('workers')
@@ -56,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         reviewModel = querySnapshot.docs
             .map((doc) =>
-            ReviewModel.fromFirestore(doc.data() as Map<String, dynamic>))
+                ReviewModel.fromFirestore(doc.data() as Map<String, dynamic>))
             .toList();
         print(reviewModel);
       });
@@ -93,6 +94,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> resetPassword() async {
+    if (userCurrentEmail.isNotEmpty) {
+      try {
+        await FirebaseAuth.instance
+            .sendPasswordResetEmail(email: userCurrentEmail);
+        Get.snackbar(
+            'Success',
+            snackPosition: SnackPosition.BOTTOM,
+            'We have sent you a reset email to your $userCurrentEmail');
+        print('Password reset email sent successfully!');
+      } catch (e) {
+        print('Error sending password reset email: $e');
+        Get.snackbar(
+            'Error',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            'We are unable to process your request $userCurrentEmail');
+      }
+    } else {
+      Get.snackbar(
+          'Error: ',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          'User email is empty, please try again');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,9 +152,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Obx(() {
-                        if (_profileController.user.value.imageUrl.isEmpty) {
+                        if (_profileController.user.value.imageUrl == null) {
                           return const Center(
-                            child: CircularProgressIndicator(),
+                            child: Icon(Icons
+                                .error), // Show error icon if imageUrl is null
                           );
                         } else {
                           return SizedBox(
@@ -134,10 +165,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               borderRadius: BorderRadius.circular(15),
                               child: CachedNetworkImage(
                                 imageUrl:
-                                _profileController.user.value.imageUrl,
-                                fit: BoxFit.cover,
+                                    _profileController.user.value.imageUrl,
                                 placeholder: (context, url) => const Center(
                                   child: CircularProgressIndicator(),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    const Center(
+                                  child: Icon(Icons.error),
                                 ),
                               ),
                             ),
@@ -148,19 +182,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Obx(() {
                         return Text(
                           _profileController.user.value.fullName,
-                          style: const TextStyle(fontSize: 20, color: Colors.white),
+                          style: const TextStyle(
+                              fontSize: 20, color: Colors.white),
                         );
                       }),
                       Obx(() {
                         return Text(
                           _profileController.user.value.role,
-                          style: const TextStyle(fontSize: 15, color: Colors.white),
+                          style: const TextStyle(
+                              fontSize: 15, color: Colors.white),
                         );
                       }),
                       Obx(() {
                         return Text(
                           _profileController.user.value.email,
-                          style: const TextStyle(fontSize: 15, color: Colors.white),
+                          style: const TextStyle(
+                              fontSize: 15, color: Colors.white),
                         );
                       }),
                       const SizedBox(height: 5),
@@ -169,16 +206,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.star, color: Colors.yellow, size: 20),
+                            const Icon(Icons.star,
+                                color: Colors.yellow, size: 20),
                             const SizedBox(width: 5),
                             Text(
                               averageRating.toStringAsFixed(1),
-                              style: const TextStyle(fontSize: 18, color: Colors.white),
+                              style: const TextStyle(
+                                  fontSize: 18, color: Colors.white),
                             ),
                             const SizedBox(width: 5),
                             Text(
                               '($totalReviews)',
-                              style: const TextStyle(fontSize: 15, color: Colors.white),
+                              style: const TextStyle(
+                                  fontSize: 15, color: Colors.white),
                             ),
                           ],
                         ),
@@ -198,6 +238,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
               //   ),
               // ),
 
+              Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                                onPressed: () async {
+                                  await resetPassword();
+                                },
+                                child: const Text('Change Password'))),
+                      ),
+                      InkWell(
+                          onTap: () async {
+                            SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            await prefs.remove('phoneNumber');
+
+                            // Navigate to the login screen and remove all previous screens from the stack
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginScreen()),
+                              (Route<dynamic> route) => false,
+                            );
+                          },
+                          child: const CustomThemeButton(buttonText: 'Logout')),
+                    ],
+                  ))
             ],
           ),
         ),

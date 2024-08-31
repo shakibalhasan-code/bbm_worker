@@ -12,6 +12,7 @@ class ProfileController extends GetxController {
   ).obs;
 
 
+
   Future<void> fetchUserData(String workerEmail) async {
     DocumentSnapshot doc = await FirebaseFirestore.instance
         .collection('workers')

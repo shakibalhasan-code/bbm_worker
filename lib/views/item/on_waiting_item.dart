@@ -83,7 +83,7 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
         _selectDate(context).then((_) {
           _selectTime(context).then((_) {
             if (_selectedDate.isNotEmpty && _selectedTime.isNotEmpty) {
-              _storeDataToFirestore();
+               _storeDataToFirestore();
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -380,32 +380,37 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
           content: Text('Successfully Saved'),
         ),
       );
-
-      await FirebaseFirestore.instance
-          .collection('workers')
-          .doc(widget.workerEmail)
-          .collection('complaints')
-          .where('id', isEqualTo: widget.waitingModel.ticketNumber)
-          .get()
-          .then((querySnapshot) {
-        if (querySnapshot.docs.isNotEmpty) {
-          querySnapshot.docs.forEach((doc) {
-            doc.reference.delete();
-          });
-        }
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Task successfully deleted'),
-        ),
-      );
-      setState(() {
-        _userDataController.fetchWaitingOnTaskData(widget.workerEmail);
-      });
     } catch (e) {
       print(e);
     }
+    await deleteDataFromWorker();
+  }
+
+  Future<void>deleteDataFromWorker()async{
+    await FirebaseFirestore.instance
+        .collection('workers')
+        .doc(widget.workerEmail)
+        .collection('complaints')
+        .where('ticketId', isEqualTo: widget.waitingModel.ticketNumber)
+        .get()
+        .then((querySnapshot) {
+      if (querySnapshot.docs.isNotEmpty) {
+        print(querySnapshot.docs);
+        querySnapshot.docs.forEach((doc) {
+          doc.reference.delete();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Task successfully Moved'),
+            ),
+          );
+        });
+
+      }
+
+      setState(() {
+        _userDataController.fetchWaitingOnTaskData(widget.workerEmail);
+      });
+    });
   }
 
   @override
@@ -442,11 +447,13 @@ class _WaitingWorkItemState extends State<WaitingWorkItem> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          widget.waitingModel.productName!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            widget.waitingModel.productName!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         IconButton(

@@ -83,12 +83,14 @@ class DoneTaskItem extends StatelessWidget {
                           children: [
                             const Icon(Icons.confirmation_num_outlined, color: Colors.green, size: 16.0),
                             const SizedBox(width: 5.0),
-                            Text(
-                              'Ticket ID: ${doneTaskModel.ticketId}',
-                              style: const TextStyle(
-                                color: Colors.white,
+                            Expanded(
+                              child: Text(
+                                'Ticket ID: ${doneTaskModel.ticketId}',
+                                style: const TextStyle(
+                                  color: Colors.white,
 
-                                fontSize: 14.0,
+                                  fontSize: 14.0,
+                                ),
                               ),
                             ),
                           ],
