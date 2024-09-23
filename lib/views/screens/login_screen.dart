@@ -19,6 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passController = TextEditingController();
   final LoginController _loginController = Get.put(LoginController());
 
+  bool _isObscured = true;
+
   @override
   void dispose() {
     super.dispose();
@@ -29,6 +31,38 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+  }
+
+  void _togglePasswordVisibility() {
+    setState(() {
+      _isObscured = !_isObscured;
+    });
+  }
+
+  void _showResetPasswordDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        TextEditingController _resetEmailController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Reset your password'),
+          content: TextField(
+            controller: _resetEmailController,
+            decoration: const InputDecoration(hintText: 'Enter your email'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Implement password reset functionality here
+                Get.back();
+                Example: _loginController.resetPassword(_resetEmailController.text.trim());
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -53,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: Image.asset('assets/images/icon.png',fit: BoxFit.cover,))),
-                  const  SizedBox(height: 20,),
+                  const SizedBox(height: 20,),
                   const Text(
                     'Welcome Back',
                     style: TextStyle(
@@ -69,13 +103,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   CustomTextField(
                       hintText: 'enter your email',
                       textEditingController: _emailController,
-                      icon: Icons.mail),
+                      suffixIcon: IconButton(onPressed: (){}, icon: const Icon(Icons.email))),
                   const SizedBox(height: 5),
                   CustomTextField(
-                      hintText: 'enter your password',
-                      textEditingController: _passController,
-                      icon: Icons.key,
-                      obscureText: true),
+                    hintText: 'enter your password',
+                    textEditingController: _passController,
+                    obscureText: _isObscured,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isObscured ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: _togglePasswordVisibility,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   GestureDetector(
                     onTap: () {
@@ -86,6 +127,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     child: const CustomThemeButton(buttonText: 'Login Now'),
                   ),
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: _showResetPasswordDialog,
+                    child: const Text(
+                      'Forgot Password?',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
                   if (_loginController.isLoading.value)
                     const SizedBox(height: 20),
                   if (_loginController.isLoading.value)
@@ -93,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               )),
             ),
-             Positioned(
+            Positioned(
               right: 0,
               left: 0,
               bottom: 20,
@@ -111,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey, fontSize: 14),
                 ),
-              )
+              ),
             ),
           ],
         ),

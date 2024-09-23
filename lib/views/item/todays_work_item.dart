@@ -38,7 +38,6 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       TextEditingController();
   final UserDataController _userDataController = Get.find<UserDataController>();
   bool isLoading = false;
-  bool doneIsLoading = false;
 
   // Future<void> _selectDate(BuildContext context) async {
   //   final now = DateTime.now();
@@ -50,6 +49,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
   void initState() {
     super.initState();
     fetchUserData();
+    print(widget.onTaskModel.documentId);
   }
 
   void fetchUserData() async {
@@ -166,7 +166,8 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                 return; // Don't pop if empty
               } else {
                 print('Selected new Date $_selectedDate & $_selectedTime');
-                Get.snackbar('Selected date', '$_selectedDate & $_selectedTime');
+                Get.snackbar(
+                    'Selected date', '$_selectedDate & $_selectedTime');
                 await updateDataCustomer(note);
                 await updateDataWorker(note);
                 await updateDataIntoMain(note);
@@ -181,14 +182,12 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                 ? const CircularProgressIndicator()
                 : const Text('OK'),
           ),
-
         ],
       ),
     );
-
   }
 
-  Future<void>updateDataCustomer(String note)async{
+  Future<void> updateDataCustomer(String note) async {
     try {
       // Step 1: Query the sub-collection to find the document with the matching message
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -208,9 +207,9 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
 
         // Step 3: Prepare data to update
         final dataToUpdate = {
-          'note': note,  // Your note data
-          'selectedDate':_selectedDate,
-          'selectedTime' : _selectedTime,
+          'note': note, // Your note data
+          'selectedDate': _selectedDate,
+          'selectedTime': _selectedTime,
           // Add other fields to update here
         };
 
@@ -236,8 +235,8 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
     }
   }
 
-  Future<void>updateDataWorker(String note)async{
-    if(currentEmail.isNotEmpty){
+  Future<void> updateDataWorker(String note) async {
+    if (currentEmail.isNotEmpty) {
       try {
         // Step 1: Query the sub-collection to find the document with the matching message
         QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -257,9 +256,9 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
 
           // Step 3: Prepare data to update
           final dataToUpdate = {
-            'note': note,  // Your note data
-            'selectedDate':_selectedDate,
-            'selectedTime' : _selectedTime,
+            'note': note, // Your note data
+            'selectedDate': _selectedDate,
+            'selectedTime': _selectedTime,
             // Add other fields to update here
           };
 
@@ -280,7 +279,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       } catch (e) {
         print('Error updating document: $e');
       }
-    }else{
+    } else {
       print('no email found!');
     }
   }
@@ -301,17 +300,18 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
         // Step 4: Check if the 'scheduleTime' field exists, if not default to 0
-        int scheduleTime = data.containsKey('scheduleTime') ? data['scheduleTime'] as int : 0;
+        int scheduleTime =
+            data.containsKey('scheduleTime') ? data['scheduleTime'] as int : 0;
 
         // Step 5: Increment the 'scheduleTime' field
         scheduleTime++;
 
         // Step 6: Prepare data to update
         final dataToUpdate = {
-          'note': note,  // Your note data
+          'note': note, // Your note data
           's-selectedDate': _selectedDate,
           's-selectedTime': _selectedTime,
-          'scheduleTime': scheduleTime,  // Update the scheduleTime
+          'scheduleTime': scheduleTime, // Update the scheduleTime
         };
 
         print(doc.id);
@@ -331,8 +331,8 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
     }
   }
 
-
   Future<String?> _showDoneNoteDialog(BuildContext context) async {
+    bool doneIsLoading = false;
     return await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -365,13 +365,13 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                 setState(() async {
                   await _storeDataToFirestore();
                   await _deleteDataFromWorker();
+                  await deleteDataWorking();
+                  await deleteComplaintByMessage();
                   await _deleteDataFromCustomer(widget.onTaskModel.ticketId);
                   await _deleteDataFromComplaints(widget.onTaskModel.ticketId);
-                  doneIsLoading=false;
+                  doneIsLoading = false;
                   Navigator.pop(context);
                 });
-
-
               }
             },
             child: doneIsLoading
@@ -444,7 +444,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
           .doc(widget.onTaskModel.phoneNumber)
           .collection('workingComplaints')
           .where('id', isEqualTo: id)
-      .get();
+          .get();
       // If documents exist, delete them
       if (querySnapshot.docs.isNotEmpty) {
         for (DocumentSnapshot documentSnapshot in querySnapshot.docs) {
@@ -594,13 +594,6 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       await FirebaseFirestore.instance
           .collection('customers')
           .doc(widget.onTaskModel.phoneNumber)
-          .collection('workingComplaints')
-          .doc(widget.onTaskModel.selectedDate)
-          .delete();
-
-      await FirebaseFirestore.instance
-          .collection('customers')
-          .doc(widget.onTaskModel.phoneNumber)
           .collection('doneComplaints')
           .add(cdata);
 
@@ -618,7 +611,9 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
           .doc(widget.onTaskModel.documentId)
           .delete();
 
-      await deleteDocumentsByMessage(widget.onTaskModel.message);
+
+
+      await deleteDocumentsByMessage();
 
       // await FirebaseFirestore.instance
       //     .collection('workers')
@@ -631,11 +626,81 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
     }
   }
 
-  Future<void> deleteDocumentsByMessage(String message) async {
+  Future<void> deleteComplaintByMessage( ) async {
+    try {
+      // Query for documents with the specified message
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('customers')
+          .doc(widget.onTaskModel.phoneNumber)
+          .collection('complaints')
+          .where('id', isEqualTo: widget.onTaskModel.ticketId)
+          .get();
+
+      // If documents exist, delete them
+      if (querySnapshot.docs.isNotEmpty) {
+        for (DocumentSnapshot documentSnapshot in querySnapshot.docs) {
+          await documentSnapshot.reference.delete();
+          print('C-C: Document deleted successfully: ${documentSnapshot.id}');
+        }
+      } else {
+        print('C-C: No documents found with message: ${widget.onTaskModel.message}');
+      }
+    } catch (e) {
+      print('C-C: Error deleting documents: $e');
+    }
+  }
+
+  Future<void>deleteDataWorking()async{
+    try {
+      // Query for documents with the specified message
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('customers')
+          .doc(widget.onTaskModel.phoneNumber)
+          .collection('workingComplaints')
+          .where('ticketId', isEqualTo: widget.onTaskModel.ticketId)
+          .get();
+
+      // If documents exist, delete them
+      if (querySnapshot.docs.isNotEmpty) {
+        for (DocumentSnapshot documentSnapshot in querySnapshot.docs) {
+          await documentSnapshot.reference.delete();
+          print('C-W: Document deleted successfully: ${documentSnapshot.id}');
+        }
+      } else {
+        print('C-W: No documents found with message: ${widget.onTaskModel.ticketId}');
+      }
+    } catch (e) {
+      print('C-W: Error deleting documents: $e');
+    }
+  }
+
+  // Future<void>deleteDataComplaint()async{
+  //   try {
+  //     final querySnapshot = await FirebaseFirestore.instance
+  //         .collection('customers')
+  //         .doc(widget.onTaskModel.phoneNumber)
+  //         .collection('complaints')
+  //         .where('id', isEqualTo: widget.onTaskModel.ticketId)
+  //         .get();
+  //
+  //     final batch = FirebaseFirestore.instance.batch();
+  //
+  //     for (final doc in querySnapshot.docs) {
+  //       batch.delete(doc.reference);
+  //     }
+  //
+  //     await batch.commit();
+  //     print('Documents deleted successfully!');
+  //   } catch (e) {
+  //     print('Error deleting documents: $e');
+  //   }
+  // }
+
+  Future<void> deleteDocumentsByMessage() async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
           .collection('complaints')
-          .where('message', isEqualTo: message)
+          .where('id', isEqualTo: widget.onTaskModel.ticketId)
           .get();
 
       final batch = FirebaseFirestore.instance.batch();
@@ -645,9 +710,9 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       }
 
       await batch.commit();
-      print('Documents deleted successfully!');
+      print('p- Documents deleted successfully!');
     } catch (e) {
-      print('Error deleting documents: $e');
+      print('p- Error deleting documents: $e');
     }
   }
 
@@ -656,7 +721,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       // Query the Firestore collection 'complaints' to find the document with the matching 'message' field
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('complaints')
-          .where('message', isEqualTo: onTaskModel.message)
+          .where('id', isEqualTo: onTaskModel.ticketId)
           .get();
 
       // Loop through the results and update the 'finished' field to true
@@ -671,6 +736,7 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
       print('Error marking complaint as finished: $e');
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -697,7 +763,6 @@ class _TodaysWorkItemState extends State<TodaysWorkItem> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-
                     Expanded(
                       child: Text(
                         widget.onTaskModel.productName,
